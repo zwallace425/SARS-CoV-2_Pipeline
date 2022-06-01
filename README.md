@@ -3,9 +3,12 @@ SARS-CoV-2 raw genomic sequence data processing and analysis pipeline
 
 This contains the folders for the SARS-CoV-2 pipeline work. The folder 'scripts' has the following object files.
 
-clean_mol_seq.py --- quality control step and filtering of ambiguous nucleotides \n
-seq_to_covariate.py --- computing the variant constellation, synonymous nucleotide mutations, non-synonymous nucleotide mutations, and locations of ambiguous regions by protein \n
-variant_dynamics.py --- runs seq_to_covariate.py and collect all variant constellations, single amino acid mutations, and counts by region and date and store in JSON \n
+clean_mol_seq.py --- quality control step and filtering of ambiguous nucleotides
+
+seq_to_covariate.py --- computing the variant constellation, synonymous nucleotide mutations, non-synonymous nucleotide mutations, and locations of ambiguous regions by protein
+
+variant_dynamics.py --- runs seq_to_covariate.py and collect all variant constellations, single amino acid mutations, and counts by region and date and store in JSON
+
 variant_analysis.py --- computes prevalence and growth rates by date and region for each variant constellation and stores as a panel dataframe
 
 Additional files:
