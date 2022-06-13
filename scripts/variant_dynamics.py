@@ -1,4 +1,10 @@
-# Object for capturing epidemiological dynamics of SARS-CoV-2 variants based on genomic sequencing data
+# Object for capturing epidemiological dynamics of SARS-CoV-2 variants based on genomic sequencing data from BV-BRC.
+# The general return from the object is a dataframe of variant counts per region and date and is passed to
+# the VariantAnalysis object for growth, prevalence, and jerk computations per date bin.
+
+# NOTE: To maintin consistent FASTA format, this object only accepts a query FASTA file in the format
+# downloaded from BV-BRC/ViPR. This object WILL NOT work with a GISAID FASTA file. Accepted FASTA files
+# can be downloaded at https://www.viprbrc.org/brcDocs/datafiles/public_share/Corona/
 
 import sys
 import re
@@ -16,19 +22,22 @@ class VariantDynamics(object):
 	# specific region over certain dates, or it be used to get the isolate counts for a specific date within
 	# the entire world.  Primarly, this data is needed to complement the aa_prevalence data, as there's no way
 	# of knowing the isolates counts from that data alone.
+	"""Parameters:
+		region_date_dict: Dictionary with isolate counts by region and date
+	"""
 	@staticmethod
-	def region_date_dict_to_df(region_date_dict):
+	def region_date_dict_to_df(region_date_dict, db = "bvbrc"):
 		region_date_df = []
 		for region in region_date_dict.keys():
 			for date in region_date_dict[region].keys():
 				count = region_date_dict[region][date]
-				dto = datetime.strptime(date, '%Y_%m_%d').date()
+				dto = datetime.strptime(date, '%Y-%m-%d').date()
 				data = pd.DataFrame({'Region': [region], 'Date': [dto], 'Count': [count]})
 				region_date_df.append(data)
 
 		region_date_df = pd.concat(region_date_df, ignore_index = True)
 
-		with open('region_date_counts_df.pkl', 'wb') as handle:
+		with open('data/'+db+'_region_date_counts_df.pkl', 'wb') as handle:
 			pickle.dump(region_date_df, handle)
 
 		return region_date_df
@@ -37,6 +46,10 @@ class VariantDynamics(object):
 	# This function coverts the dictionary containing all the epidemiological dynamics for each covariate
 	# or AA mutation into a dataframe format that can be used in downstream data analysis.  This function
 	# also saves the dataframe to a pickle.
+	"""Parameters:
+		prevalence_dict: Dictionary of either covariate or aa mutation region-date prevalence
+		mut_type: either 'aa' for amino acid mutation or 'cov' for covariate
+	"""
 	@staticmethod
 	def variant_dict_to_df(prevalence_dict, mut_type):
 		prevalence_df = []
@@ -44,13 +57,13 @@ class VariantDynamics(object):
 			for region in prevalence_dict[variant].keys():
 				for date in prevalence_dict[variant][region].keys():
 					prev = prevalence_dict[variant][region][date]
-					dto = datetime.strptime(date, '%Y_%m_%d').date()
+					dto = datetime.strptime(date, '%Y-%m-%d').date()
 					data = pd.DataFrame({'Variant': [variant], 'Region': [region], 'Date': [dto], 'Count': [prev]})
 					prevalence_df.append(data)
 
 		prevalence_df = pd.concat(prevalence_df, ignore_index = True)
 
-		with open(mut_type+'_prevalence_df.pkl', 'wb') as handle:
+		with open('data/'+mut_type+'_prevalence_df.pkl', 'wb') as handle:
 			pickle.dump(prevalence_df, handle)
 
 		return prevalence_df
@@ -59,7 +72,10 @@ class VariantDynamics(object):
 	# This function relies on the covariate prevalence output from the spatial_temporal_prevalence function 
 	# (a dictionary/json file of covariate date-region prevalence) and computes the prevalence of each amino 
 	# acid substituion by time and region.  This function does not need to be called as it is mostly an alternative
-	# approach to computing single amino acid substitution dynamics
+	# approach to computing single amino acid substitution dynamics.
+	"""Parameters:
+		cov_prevalence: Dictionary mapping covariates to region-date prevalence
+	"""
 	@staticmethod
 	def aa_prevalence_extra(cov_prevalence):
 
@@ -87,9 +103,55 @@ class VariantDynamics(object):
 		return aa_prevalence
 
 
+	# This function gets called within the spatial_temporal_prevalence function to compute the
+	# region-date prevalence counts of protein specific covariates.  It returns a dictionary of 
+	# dictionaries, containing the region-date covariate counts for each unique covariate of each
+	# protein.
+	"""Parameters:
+		prot_cov_prevalence: Dictionary of region-date protein-specific covariate counts
+		prot_cov: Dictionary of the covariate sequence for each protein orginating from some
+			single covariate
+		region: Region of isolation for sequence that mutations originate
+		date: Date of isolation for sequence that mutation orginate
+	"""
+	@staticmethod
+	def protein_covariate_prevalence(prot_cov_prevalence, prot_cov, region, date):
+
+		for prot in prot_cov.keys():
+			cov = prot_cov[prot]
+			if prot_cov_prevalence.get(prot):
+				if prot_cov_prevalence[prot].get(cov):
+					if prot_cov_prevalence[prot][cov].get(region):
+						if prot_cov_prevalence[prot][cov][region].get(date):
+							prot_cov_prevalence[prot][cov][region][date] += 1
+						else:
+							prot_cov_prevalence[prot][cov][region][date] = 1
+					else:
+						prot_cov_prevalence[prot][cov][region] = {}
+						prot_cov_prevalence[prot][cov][region][date] = 1
+				else:
+					prot_cov_prevalence[prot][cov] = {}
+					prot_cov_prevalence[prot][cov][region] = {}
+					prot_cov_prevalence[prot][cov][region][date] = 1
+			else:
+				prot_cov_prevalence[prot] = {}
+				prot_cov_prevalence[prot][cov] = {}
+				prot_cov_prevalence[prot][cov][region] = {}
+				prot_cov_prevalence[prot][cov][region][date] = 1
+
+		return prot_cov_prevalence
+
+
+
 	# This function gets called from within spatial_temporal_prevalence to compute the region-date
 	# prevalence of single amino acid substitions in parallel with covariates and is the main method
-	# for capturing single amino acid substitution dynamics
+	# for capturing single amino acid substitution dynamics.
+	"""Parameters:
+		aa_prevalence: Dictionariy mapping aa mutation to region-date prevalence
+		aa_muts: List of mutations from a single covariate
+		region: Region of isolation for sequence that mutations originate
+		date: Date of isolation for sequence that mutation orginate
+	"""
 	@staticmethod
 	def aa_prevalence_main(aa_prevalence, aa_muts, region, date):
 
@@ -117,9 +179,21 @@ class VariantDynamics(object):
 	# including a dictionary of sequence to covariate mappings, a dictionary of covariate prevalence, a dictionary
 	# of aa mut prevalence, and a dictionary of QC results for each ViPR/Genbank Sequence.  These four optional 
 	# files must be saved as a compressed json (gzip) and will re-save the updated data back to a pickle.
+	"""Parameters:
+		ref_fasta: SARS-CoV-2 reference fasta
+		seqs_fasta: SARS-CoV-2 query sequences fasta
+		variant_mappings: Dictionary mapping all sequences to covariate, protein specific covariates, non-synonymous mutations
+			synoymous mutations, and ambiguitiy location by protein
+		cov_prevalence: Dictionary mapping covariates to region-date prevalence
+		aa_prevalence: Dictionary mapping aa mutation to region-date prevalence
+		prot_cov_prevalence: Dictionary mapping each protein to covariate region-date prevalence
+			region_date_counts 
+		region_date_counts: Dictionary of sequence isolate counts by region and date
+		qc_storage_file: Dictionary mapping GenBank accesion to sequence to QC status
+	"""
 	@staticmethod
 	def spatial_temporal_prevalence(ref_fasta, seqs_fasta, variant_mappings = {}, cov_prevalence = {}, 
-		aa_prevalence = {}, region_date_counts = {}, qc_storage_file = {}):
+		aa_prevalence = {}, prot_cov_prevalence = {}, region_date_counts = {}, qc_storage_file = {}):
 
 
 		if variant_mappings != {}:
@@ -128,6 +202,8 @@ class VariantDynamics(object):
 			cov_prevalence = compress_json.load(cov_prevalence)
 		if aa_prevalence != {}:
 			aa_prevalence = compress_json.load(aa_prevalence)
+		if prot_cov_prevalence != {}:
+			prot_cov_prevalence = compress_json.load(prot_cov_prevalence)
 		if region_date_counts != {}:
 			region_date_counts = compress_json.load(region_date_counts)	
 		if qc_storage_file != {}:
@@ -143,6 +219,7 @@ class VariantDynamics(object):
 		for seq_record in SeqIO.parse(seqs_fasta, 'fasta'):
 			acc = str(seq_record.id.split("|")[1])
 			date = str(seq_record.id.split("|")[2])
+			date = date.replace("_", "-")
 			region = str(seq_record.id.split("|")[4])
 			seq = str(seq_record.seq)
 			if region == "USA":
@@ -184,9 +261,11 @@ class VariantDynamics(object):
 				non_syn = all_mutations[0]
 				syn = all_mutations[1]
 				cov = all_mutations[2]
-				ambig = all_mutations[3]
+				prot_cov = all_mutations[3]
+				ambig = all_mutations[4]
 				aa_muts = cov.split(",")
 				aa_prevalence = VariantDynamics.aa_prevalence_main(aa_prevalence, aa_muts, region, date)
+				prot_cov_prevalence = VariantDynamics.protein_covariate_prevalence(prot_cov_prevalence, prot_cov, region, date)
 				if cov_prevalence.get(cov):
 					if cov_prevalence[cov].get(region):
 						if cov_prevalence[cov][region].get(date):
@@ -202,13 +281,16 @@ class VariantDynamics(object):
 					cov_prevalence[cov][region][date] = 1
 					variant_mappings[seq] = {}
 					variant_mappings[seq]['covariate'] = cov
+					variant_mappings[seq]['protein-covariate'] = prot_cov
 					variant_mappings[seq]['non-synonymous'] = non_syn
 					variant_mappings[seq]['synonymous'] = syn
 					variant_mappings[seq]['ambiguous'] = ambig
 			else:
 				cov = variant_mappings[seq]['covariate']
+				prot_cov = variant_mappings[seq]['protein-covariate']
 				aa_muts = cov.split(",")
 				aa_prevalence = VariantDynamics.aa_prevalence_main(aa_prevalence, aa_muts, region, date)
+				prot_cov_prevalence = VariantDynamics.protein_covariate_prevalence(prot_cov_prevalence, prot_cov, region, date)
 				if cov_prevalence.get(cov):
 					if cov_prevalence[cov].get(region):
 						if cov_prevalence[cov][region].get(date):
@@ -231,21 +313,28 @@ class VariantDynamics(object):
 				region_date_counts[region] = {}
 				region_date_counts[region][date] = 1
 
-		compress_json.dump(variant_mappings, "variant_mappings.json.gz")
-		compress_json.dump(cov_prevalence, "cov_prevalence.json.gz")
-		compress_json.dump(aa_prevalence, "aa_prevalence.json.gz")
-		compress_json.dump(region_date_counts, "region_date_counts.json.gz")
-		compress_json.dump(qc_storage_file, "SARS-CoV-2_Sequence_QC.json.gz")
+		compress_json.dump(variant_mappings, "data/bvbrc_variant_mappings.json.gz")
+		compress_json.dump(cov_prevalence, "data/bvrc_cov_prevalence.json.gz")
+		compress_json.dump(aa_prevalence, "data/bvbrc_aa_prevalence.json.gz")
+		compress_json.dump(prot_cov_prevalence, "data/bvbrc_prot_cov_prevalence.json.gz")
+		compress_json.dump(region_date_counts, "data/bvbrc_region_date_counts.json.gz")
+		compress_json.dump(qc_storage_file, "data/bvbrc_SARS-CoV-2_Sequence_QC.json.gz")
 
 		
-		return (VariantDynamics.variant_dict_to_df(cov_prevalence, 'cov'), 
-			VariantDynamics.variant_dict_to_df(aa_prevalence, 'aa'),
+		return (VariantDynamics.variant_dict_to_df(cov_prevalence, 'bvbrc_cov'), 
+			VariantDynamics.variant_dict_to_df(aa_prevalence, 'bvbrc_aa'),
+			prot_cov_prevalence,
 			VariantDynamics.region_date_dict_to_df(region_date_counts))
 
 
 	# This function computes covariate prevalence for an entire pool of sequences in some fasta file. 
-	# It does not compute prevalence by data and region.  It also returns accessions for each covariate
-	# as a dictionary.  This function is mainly used for quality control purposes, not necessarily analysis.
+	# It does not compute prevalence by date and region.  It also returns accessions for each covariate
+	# as a dictionary.  This function is mainly used for quality control purposes, not a step for analysis
+	# in the pipeline.
+	"""Parameters:
+		ref_fasta: SARS-CoV-2 reference sequence as fasta
+		seqs_fasta: SARS-CoV-2 query sequences as fasta
+	"""
 	@staticmethod
 	def covariate_prevalence(ref_fasta, seqs_fasta):
 
@@ -292,9 +381,10 @@ if __name__ == "__main__":
 	variant_mappings = sys.argv[3]
 	cov_prevalence = sys.argv[4]
 	aa_prevalence = sys.argv[5]
-	qc_storage_file = sys.argv[6]
+	region_date_counts = sys.argv[6]
+	qc_storage_file = sys.argv[7]
 
-	cov_prev, aa_prev = VariantDynamics.spatial_temporal_prevalence(ref, seqs, variant_mappings, cov_prevalence, aa_prevalence, qc_storage_file)
+	cov_prev, aa_prev, prot_cov_prev, region_dates = VariantDynamics.spatial_temporal_prevalence(ref, seqs, variant_mappings, cov_prevalence, aa_prevalence, region_date_counts, qc_storage_file)
 
 	for i in cov_prev.keys():
 		print(i)

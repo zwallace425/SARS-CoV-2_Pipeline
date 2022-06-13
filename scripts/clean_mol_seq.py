@@ -105,6 +105,7 @@ class CleanMolSeq(object):
         keep_genome_acc = set()
         irreg_count = dict()
 
+        # Use already established storage file or intialize new
         if qc_storage_infile != None:
             storage = compress_json.load(qc_storage_infile)
         else:
@@ -113,7 +114,7 @@ class CleanMolSeq(object):
         for mol_seq in CleanMolSeq.stream_fasta(f0, True):
             name_lwr = mol_seq.get_seq_id().lower()
             acc = mol_seq.get_seq_id().split('|')[1]
-            if storage.get(acc):
+            if storage.get(acc): # If we come accross an already processess genome accession, skip it.
                 continue
             seq = mol_seq.get_seq()
             reg = mol_seq.count_regular_chars_na()

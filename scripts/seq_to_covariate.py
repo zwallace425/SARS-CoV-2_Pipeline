@@ -17,10 +17,10 @@ class SeqToCovariate(object):
 	"GAC": "D","GAA": "E","GAG": "E","TGT": "C","TGC": "C","TGA": 'STOP',"TGG": "W","CGT": "R","CGC": "R","CGA": "R","CGG": "R","AGT": "S",
 	"AGC": "S","AGA": "R","AGG": "R","GGT": "G","GGC": "G","GGA": "G","GGG": "G"}
 
-	ORF1a = {"leader": (1, 180),"nsp2": (181, 818),"nsp3": (819, 2763), "nsp4": (2764, 3263),"3C": (3264, 3569),"nsp6": (3570, 3859),
+	ORF1a = {"leader": (1, 180),"nsp2": (181, 818),"nsp3": (819, 2763), "nsp4": (2764, 3263),"nsp5": (3264, 3569),"nsp6": (3570, 3859),
 	"nsp7": (3860, 3942),"nsp8": (3943, 4140),"nsp9": (4141, 4253),"nsp10": (4254, 4392), "nsp11": (4393, 4405)}
 
-	ORF1b = {"RdRp": (1, 932),"helicase": (933, 1533),"exonuclease": (1534, 2060),"endoRNAse": (2061, 2406),"methyltransferase": (2407, 2704)}
+	ORF1b = {"nsp12": (1, 932),"nsp13": (933, 1533),"nsp14": (1534, 2060),"nsp15": (2061, 2406),"nsp16": (2407, 2704)}
 
 	# Adapted from https://github.com/nextstrain/ncov/blob/50ceffa/defaults/annotation.gff with slight
 	# change to ORF1a/ORF1b based on Vigor4 annotations from the Virus Pathogen Resource
@@ -41,7 +41,7 @@ class SeqToCovariate(object):
 		.	.	gene	27756	27887	.	+	.	gene_name "ORF7b"
 		.	.	gene	27894	28259	.	+	.	gene_name "ORF8"
 		.	.	gene	28284	28577	.	+	.	gene_name "ORF9b"
-		.	.	gene	21563	25384	.	+	.	gene_name "S"
+		.	.	gene	21563	25384	.	+	.	gene_name "Spike"
 		"""
 		genes = []
 		rows = annotation_tsv.split("\n")
@@ -85,7 +85,9 @@ class SeqToCovariate(object):
 
 		covariate = []
 		ambiguous = []
+		protein_covariates = {}
 		for gene in aa_seqs.keys():
+			prot_covariate = defaultdict(list)
 			aa_seq = aa_seqs[gene]
 			ref_seq = reference_aa.REFERENCE_AA[gene]
 			alignment = edlib.align(aa_seq, ref_seq, task = 'path')
@@ -111,13 +113,15 @@ class SeqToCovariate(object):
 						if idx in 'D':
 							for i in range(num):
 								if is_orf:
-									del_mut = gene+":"+ref_seq[start + i - 1]+str(new_pos + i)+"-"
+									del_mut = gene+"_"+ref_seq[start + i - 1]+str(new_pos + i)+"-"
+									prot_covariate[gene].append(del_mut)
 									mutations.append(del_mut)
 								else:
-									del_mut = gene+":"+ref_seq[start + i - 1]+str(start + i)+"-"
+									del_mut = gene+"_"+ref_seq[start + i - 1]+str(start + i)+"-"
 									# Weird glitch in edlib alignment, needs to be manually changed
-									if del_mut == "N:G204-":
-										del_mut = "N:G204R"
+									if del_mut == "N_G204-":
+										del_mut = "N_G204R"
+									prot_covariate[gene].append(del_mut)
 									mutations.append(del_mut)
 						elif idx in 'X':
 							for i in range(num):
@@ -126,22 +130,24 @@ class SeqToCovariate(object):
 									if (aa_sub == 'X'): # Ambiguous, collect position then skip
 										ambiguous.append((gene, new_pos + i))
 										continue
-									aa_mut = gene+":"+ref_seq[start + i - 1]+str(new_pos + i)+aa_sub
+									aa_mut = gene+"_"+ref_seq[start + i - 1]+str(new_pos + i)+aa_sub
+									prot_covariate[gene].append(aa_mut)
 									mutations.append(aa_mut)
 								else:
 									aa_sub = seq_aligned[(start + i + insertions - 1)]
 									if (aa_sub == 'X'):
 										ambiguous.append((gene, start + i))
 										continue
-									aa_mut = gene+":"+ref_seq[start + i - 1]+str(start + i)+aa_sub
+									aa_mut = gene+"_"+ref_seq[start + i - 1]+str(start + i)+aa_sub
+									prot_covariate[gene].append(aa_mut)
 									mutations.append(aa_mut)
 					if idx in 'I':
 						good_ins = False
 						if is_orf:
 							gene, new_pos = get_orf1ab_structural(start, orf)
-							ins_mut = gene+":"+"ins"+str(new_pos-1)
+							ins_mut = gene+"_"+"ins"+str(new_pos-1)
 						else:
-							ins_mut = gene+":"+"ins"+str(start-1)
+							ins_mut = gene+"_"+"ins"+str(start-1)
 						for i in range(num):
 							if (seq_aligned[(start + i + insertions - 1)] == "X"):
 								continue
@@ -149,8 +155,9 @@ class SeqToCovariate(object):
 							good_ins = True
 						if good_ins:
 							# Weird glitch in edlib alignment, needs to be manually changed
-							if ins_mut == "N:ins202K":
-								ins_mut = "N:R203K"
+							if ins_mut == "N_ins202K":
+								ins_mut = "N_R203K"
+							prot_covariate[gene].append(ins_mut)
 							mutations.append(ins_mut)
 						insertions += num
 					else:
@@ -159,6 +166,9 @@ class SeqToCovariate(object):
 				if mutations != []:
 					mutations = ','.join(mutations)
 					covariate.append(mutations)
+					for prot in prot_covariate.keys():
+						protein_covariates[prot] = ','.join(prot_covariate[prot])
+
 		
 		# Concatentate the ambiguous chunks together as a representative string
 		# denoting protein and positions for which ambiguity is located
@@ -166,7 +176,7 @@ class SeqToCovariate(object):
 			ambig_chunks = []
 			prev_gene = ambiguous[0][0]
 			prev_pos = ambiguous[0][1]
-			a = prev_gene+":"+str(prev_pos)+"-"
+			a = prev_gene+"_"+str(prev_pos)+"-"
 			ambiguous = ambiguous[1:]
 			for ambig in ambiguous:
 				ambig_gene = ambig[0]
@@ -178,12 +188,12 @@ class SeqToCovariate(object):
 					ambig_chunks.append(a)
 					prev_gene = ambig_gene
 					prev_pos = ambig_pos
-					a = prev_gene+":"+str(prev_pos)+"-"
+					a = prev_gene+"_"+str(prev_pos)+"-"
 			a = a+str(prev_pos)
 			ambig_chunks.append(a)
 			prev_gene = ambig_gene
 			prev_pos = ambig_pos
-			a = prev_gene+":"+str(prev_pos)+"-"
+			a = prev_gene+"_"+str(prev_pos)+"-"
 			
 			ambig_chunks = ','.join(ambig_chunks)
 		else:
@@ -191,12 +201,16 @@ class SeqToCovariate(object):
 
 
 		covariate = ','.join(covariate)
-		return(covariate, ambig_chunks)
+		return(covariate, protein_covariates, ambig_chunks)
 
 
 	# Adapted from Fritz Obermeyer
 	# Takes in a reference and a list of nuc mutations as (1234, 'A'),
 	# returns the nonsynonymous and synonymous mutations as disjoint lists
+	"""Paramaters:
+		ref: SARS-CoV-2 reference sequence, processed fasta, just the string
+		muts: Tuple of nucleotide mutations denoted as (position, alt)
+	"""
 	@staticmethod
 	def non_and_syn_mutations(ref, muts):
 		ms_by_aa = defaultdict(list)
@@ -250,6 +264,10 @@ class SeqToCovariate(object):
 	# Compute the mutations of a SARS-CoV-2 query sequence based on alignment to the Wuhan reference
 	# Takes in a reference nucleotide sequence and the query sequence, and returns non-synonymous mutations, 
 	# synonymous mutations, and the covariate (constellation of amino acid substituions)
+	"""Parameters:
+		ref: SARS-CoV-2 reference sequence, processed fasta, just the string
+		seq: SARS-CoV-2 query sequence, processed fasta, just the string
+	"""
 	@staticmethod
 	def mutations(ref, seq):
 		# Pairwise alignment to Wuhan reference, get cigar string
@@ -344,8 +362,8 @@ class SeqToCovariate(object):
 
 		else: 
 			synonymous_muts, non_syn_muts = SeqToCovariate.non_and_syn_mutations(ref, nuc_mutations_no_indels)
-			covariate, ambig_chunck = SeqToCovariate.aa_mutations(query_seqs)
-			return([non_syn_muts, synonymous_muts, covariate, ambig_chunck])
+			covariate, protein_covariates, ambig_chunck = SeqToCovariate.aa_mutations(query_seqs)
+			return([non_syn_muts, synonymous_muts, covariate, protein_covariates, ambig_chunck])
 
 
 if __name__ == "__main__":
@@ -367,7 +385,9 @@ if __name__ == "__main__":
 			print('\n')
 			print("Covariate:", all_mutations[2])
 			print('\n')
-			print("Ambiguous Positions:", all_mutations[3])
+			print("Protein Covariates:", all_mutations[3])
+			print('\n')
+			print("Ambiguous Positions:", all_mutations[4])
 			print('\n')
 		else:
 			print(all_mutations)

@@ -1,4 +1,7 @@
-# Object for analyzing SARS-CoV-2 variants based on epedimiological data and prior experimental knowledge
+# Object for provding an analyzable dataframe of epedimologcial dynamics for SARS-Cov-2 variants.
+# The general return from this object is a dataframe of variant prevalence, growth, and jerk by 
+# date bin (either a single day, week, 2-weeks, or month) per country.  It requires the dataframe
+# from VariantDynamics
 
 import sys
 import pickle
@@ -11,9 +14,16 @@ import variant_dynamics as vd
 class VariantAnalysis(object):
 
 	# This function will analyze the saved compressed JSON that was created in spatial_temporal_prevalence in
-	# variant_dynamics.py as well as uncompress the region_date json file
+	# variant_dynamics.py as well as uncompress the region_date json .
+	"""Parameters:
+		prevalence_df: Dictionary of aa mutation or covariate counts by region and date stored as compressed JSON
+		region_date_df: Dictionary of region-date isolate counts stored as compressed JSON
+		interval: Interval by which to aggregate counts by date and compute variant prevalence over some interval.
+			This paramter must either be 'D' (day), 'W' (week), '2W' (bi-weekly), or 'M' (month)
+		world: Boolean to determine whether to aggregate prevalence globally or leave by region 
+	"""
 	@staticmethod
-	def analyze_from_saved_dict(prevalence_dict_json, region_date_dict_json, interval = 'W', world = False):
+	def analyze_from_saved_dict(prevalence_dict_json, region_date_dict_json, interval = '2W', world = False):
 			
 		prevalence_dict = compress_json.load(prevalence_dict_json)
 		region_date_dict = compress_json.load(region_date_dict_json)
@@ -23,7 +33,7 @@ class VariantAnalysis(object):
 			for region in prevalence_dict[variant].keys():
 				for date in prevalence_dict[variant][region].keys():
 					prev = prevalence_dict[variant][region][date]
-					dto = datetime.strptime(date, '%Y_%m_%d').date()
+					dto = datetime.strptime(date, '%Y-%m-%d').date()
 					data = pd.DataFrame({'Variant': [variant], 'Region': [region], 'Date': [dto], 'Count': [prev]})
 					prevalence_df.append(data)
 
@@ -31,7 +41,7 @@ class VariantAnalysis(object):
 		for region in region_date_dict.keys():
 			for date in region_date_dict[region].keys():
 				count = region_date_dict[region][date]
-				dto = datetime.strptime(date, '%Y_%m_%d').date()
+				dto = datetime.strptime(date, '%Y-%m-%d').date()
 				data = pd.DataFrame({'Region': [region], 'Date': [dto], 'Count': [count]})
 				region_date_df.append(data)
 
@@ -43,8 +53,16 @@ class VariantAnalysis(object):
 
 	# This function will analyze the saved pickled dataframe that was created in dictionary_to_dataframe
 	# in variant_dynamics.py and also open the region_date pickeled dataframe
+	"""Parameters:
+		prevalence_df: Pickeled dataframe of aa mutation or covariate counts by region and date
+		region_date_df: Pickeled dataframe of region-date isolate counts
+		interval: Interval by which to aggregate counts by date and compute variant prevalence over some interval.
+			This paramter must either be 'D' (day), 'W' (week), '2W' (bi-weekly), or 'M' (month)
+		world: Boolean to determine whether to aggregate prevalence globally or leave by region 
+	"""
 	@staticmethod
-	def analyze_from_saved_df(prevalence_df_pkl, region_date_df_pkl, interval = 'W', world = False):
+	def analyze_from_saved_df(prevalence_df_pkl, region_date_df_pkl, interval = '2W', world = False):
+		
 		with open(prevalence_df_pkl, 'rb') as handle:
 			prevalence_df = pickle.load(handle)
 
@@ -54,14 +72,54 @@ class VariantAnalysis(object):
 		return(VariantAnalysis.analyze_dynamics(prevalence_df, region_date_df, interval, world))
 
 
-	# This will manipulate the dataframe generated from analyze_covariates_from_output (or likewise for the AA function)
+	# This function will manipulate the protein covariates prevalence dictionary, which has the date-region prevalence
+	# counts of each protein specific covariates generated from spatial_temporal_prevalence in VariantDynamics and return
+	# this as a protein covariate specific dataframe to be analyzeed in analyze dynamics.  This function is called when 
+	# a user wants to analyze dynamics of just spike covariates, or any othe protein, instead of the full variant constellation.
+	"""Parameters:
+		prot_cov_prev_dict: Dictionary of protein-specific covariate region-date counts
+		region_date_df: Dataframe of region-date isolate counts
+		interval: Interval by which to aggregate counts by date and compute variant prevalence over some interval.
+			This paramter must either be 'D' (day), 'W' (week), '2W' (bi-weekly), or 'M' (month)
+		world: Boolean to determine whether to aggregate prevalence globally or leave by region 
+	"""
+	@staticmethod
+	def analyze_protein_covariates(prot_cov_prev_dict, region_date_df, protein, interval = '2W', world = False):
+		
+		if (prot_cov_prev_dict.get(protein) == None):
+			sys.exit("Invalid SARS-CoV-2 protein.  Please enter a valid non-structural protein name of accessory protein name.")
+
+		prevalence_dict = prot_cov_prev_dict[protein]
+
+		prevalence_df = []
+		for variant in prevalence_dict.keys():
+			for region in prevalence_dict[variant].keys():
+				for date in prevalence_dict[variant][region].keys():
+					prev = prevalence_dict[variant][region][date]
+					dto = datetime.strptime(date, '%Y-%m-%d').date()
+					data = pd.DataFrame({'Variant': [variant], 'Region': [region], 'Date': [dto], 'Count': [prev]})
+					prevalence_df.append(data)
+
+		prevalence_df = pd.concat(prevalence_df, ignore_index = True)
+
+		return(VariantAnalysis.analyze_dynamics(prevalence_df, region_date_df, interval, world))
+
+
+	# This will manipulate the dataframe generated from spatial_temporal_prevalence in VariantDynamics, cov_prevalence or aa_prevalence,
 	# that has the covariate/aa mutation counts by date and region into a dataframe grouped by a specified time interval
 	# by region, or globaly if "world" is True.  So if a user wants to analyze variant dynamics by week, this will group
 	# all variant counts into its appropriate week bin by region and then use those aggregations to compute the prevalence
 	# ratio, growth, and jerk by regions by date.  If "world" is True that the dataframe will represent dynamics of each
-	# variant globally by date. 
+	# variant globally by date.
+	"""Parameters:
+		prevalence_df: Dataframe of aa mutation or covariate counts by region and date
+		region_date_df: Dataframe of region-date isolate counts
+		interval: Interval by which to aggregate counts by date and compute variant prevalence over some interval.
+			This paramter must either be 'D' (day), 'W' (week), '2W' (bi-weekly), or 'M' (month)
+		world: Boolean to determine whether to aggregate prevalence globally or leave by region 
+	"""
 	@staticmethod
-	def analyze_dynamics(prevalence_df, region_date_df, interval = 'W', world = False):
+	def analyze_dynamics(prevalence_df, region_date_df, interval = '2W', world = False):
 
 		prevalence_df['Date'] = pd.to_datetime(prevalence_df['Date'])
 		region_date_df['Date'] = pd.to_datetime(region_date_df['Date'])
@@ -86,7 +144,6 @@ class VariantAnalysis(object):
 			prevalence_df['Jerk'] = prevalence_df.groupby(['Variant', 'Region'])['Growth'].diff()
 			prevalence_df = prevalence_df.fillna(0)
 
-
 		return(prevalence_df)
 			
 
@@ -97,6 +154,7 @@ if __name__ == "__main__":
 	sequences = sys.argv[2]
 	interval = sys.argv[3]
 	world = sys.argv[4]
+	protein = sys.argv[5]
 
 
 	if (sys.argv[4] == "T"):
@@ -104,12 +162,15 @@ if __name__ == "__main__":
 	elif (sys.argv[4] == "F"):
 		world = False
 
-	cov_prev, aa_prev, region_date_counts = vd.VariantDynamics.spatial_temporal_prevalence(reference, sequences)
+	cov_prev, aa_prev, prot_cov_prev, region_date_counts = vd.VariantDynamics.spatial_temporal_prevalence(reference, sequences)
 
 	cov_prev_df = VariantAnalysis.analyze_dynamics(cov_prev, region_date_counts, interval, world)
 	aa_prev_df = VariantAnalysis.analyze_dynamics(aa_prev, region_date_counts, interval, world)
+	prot_cov_pref_df = VariantAnalysis.analyze_protein_covariates(prot_cov_prev, region_date_counts, protein, interval, world)
 
 	print(cov_prev_df)
 	print('\n')
 	print(aa_prev_df)
+	print('\n')
+	print(prot_cov_pref_df)
 
