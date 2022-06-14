@@ -1,0 +1,40 @@
+Protein	Feature	Start	End
+N	Mutagenesis	109	109
+ORF3a	Mutagenesis	1	41
+ORF3a	Mutagenesis	57	58
+ORF3a	Mutagenesis	116	116
+nsp3	Mutagenesis	811	811
+nsp3	Mutagenesis	814	814
+nsp3	Mutagenesis	820	820
+nsp3	Active site/Mutagenesis	856	856
+nsp3	Mutagenesis	1013	1013
+nsp3	Active site	1017	1017
+nsp5	Active site	41	41
+nsp5	Active site	145	145
+nsp12	Drug Resistance	166	166
+nsp12	Drug Resistance	479	479
+nsp12	Drug Resistance	483	483
+nsp12	Drug Resistance	556	556
+nsp12	Active site	759	761
+nsp12	Drug Resistance	802	802
+nsp12	Drug Resistance	860	860
+nsp12	Mutagenesis	861	861
+NS3	Mutagenesis	1	41
+NS3	Mutagenesis	57	58
+NS3	Mutagenesis	116	116
+NSP3	Mutagenesis	811	811
+NSP3	Mutagenesis	814	814
+NSP3	Mutagenesis	820	820
+NSP3	Active site/Mutagenesis	856	856
+NSP3	Mutagenesis	1013	1013
+NSP3	Active site	1017	1017
+NSP3	Active site	41	41
+NSP3	Active site	145	145
+NSP12	Drug Resistance	166	166
+NSP12	Drug Resistance	479	479
+NSP12	Drug Resistance	483	483
+NSP12	Drug Resistance	556	556
+NSP12	Active site	759	761
+NSP12	Drug Resistance	802	802
+NSP12	Drug Resistance	860	860
+NSP12	Mutagenesis	861	861
