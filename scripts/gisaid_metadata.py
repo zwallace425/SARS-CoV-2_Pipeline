@@ -151,33 +151,34 @@ class GisaidMetadata(object):
 		return (vd.variant_dict_to_df(aa_prevalence, 'gisaid_aa'), 
 			vd.region_date_dict_to_df(aa_region_date_counts, 'gisaid_aa'))
 
-	
 
-	# The functions collects the Spike covariate counts by region-date from the GISAID metadata file. If passed in
-	# and exisiting list of accessions, it will only compute on the new accessions and update the exisiting Spike covariate
+
+	# The functions collects the covariate counts by region-date from the GISAID metadata file for a specific protein. If passed in
+	# and exisiting list of accessions, it will only compute on the new accessions and update the exisiting protein covariate
 	# prevalence JSON file as well as the region-date counts dictionary file
 	"""Parameters:
-		spike_accessions: A dictionary mapping GISAID acession to full covariate (like in the function above but this is only supposed
+		protein: Inputted protein to compute the covariates for
+		prot_accessions: A dictionary mapping GISAID acession to full covariate (like in the function above but this is only supposed
 			to be for accessions that we've computed Spike covariate counts)
-		spike_prevalence: A dictionariy mapping Spike covariate to region to date to counts
-		spike_region_date_counts: A dictionary mapping region to date to total isolate counts
+		prot_prevalence: A dictionariy mapping some protein covariate to region to date to counts
+		prot_region_date_counts: A dictionary mapping region to date to total isolate counts
 	"""
-	def spike_counts(self, spike_accessions = {}, spike_prevalence = {}, spike_region_date_counts = {}):
+	def protein_counts(self, protein, prot_accessions = {}, prot_prevalence = {}, prot_region_date_counts = {}):
 
 		def num_sort(text):
 			return list(map(int, re.findall(r'\d+', text)))[0]
 
 		data = self.gisaid
 
-		if (spike_accessions != {} or spike_prevalence != {} or spike_region_date_counts != {}):
-			if (spike_accessions == {} or spike_prevalence == {} or spike_region_date_counts == {}):
+		if (prot_accessions != {} or prot_prevalence != {} or prot_region_date_counts != {}):
+			if (prot_accessions == {} or prot_prevalence == {} or prot_region_date_counts == {}):
 				sys.exit("Input Error: accessions, prevalence counts, and region-date counts must all be inputted or none inputed for GISAID analysis.")
 		
-		if spike_accessions != {}:
-			spike_accessions = compress_json.load(spike_accessions)
-			spike_prevalence = compress_json.load(spike_prevalence)
-			spike_region_date_counts = compress_json.load(spike_region_date_counts)
-			data = data[(not data['Acession ID'].isin(spike_accessions.keys()))]
+		if prot_accessions != {}:
+			prot_accessions = compress_json.load(prot_accessions)
+			prot_prevalence = compress_json.load(prot_prevalence)
+			prot_region_date_counts = compress_json.load(prot_region_date_counts)
+			data = data[(not data['Acession ID'].isin(prot_accessions.keys()))]
 
 		for ind in data.index:
 			name = data['Virus name'][ind].split("/")
@@ -186,47 +187,47 @@ class GisaidMetadata(object):
 			date = data['Collection date'][ind]
 			date = date.strftime('%Y-%m-%d')
 
-			if spike_region_date_counts.get(region):
-				if spike_region_date_counts[region].get(date):
-					spike_region_date_counts[region][date] += 1
+			if prot_region_date_counts.get(region):
+				if prot_region_date_counts[region].get(date):
+					prot_region_date_counts[region][date] += 1
 				else:
-					spike_region_date_counts[region][date] = 1
+					prot_region_date_counts[region][date] = 1
 			else:
-				spike_region_date_counts[region] = {}
-				spike_region_date_counts[region][date] = 1
+				prot_region_date_counts[region] = {}
+				prot_region_date_counts[region][date] = 1
 
 			cov = data['AA Substitutions'][ind]
 			cov = cov[1:-1]
-			spike_accessions[acc] = cov
+			prot_accessions[acc] = cov
 			muts = cov.split(",")
 			
-			spike_cov = []
+			prot_cov = []
 			for mut in muts:
-				if "Spike" in mut:
-					spike_cov.append(mut)
-			spike_cov.sort(key=num_sort)
-			spike_cov = ",".join(spike_cov)
+				if protein in mut:
+					prot_cov.append(mut)
+			prot_cov.sort(key=num_sort)
+			prot_cov = ",".join(prot_cov)
 
-			if spike_prevalence.get(spike_cov):
-				if spike_prevalence[spike_cov].get(region):
-					if spike_prevalence[spike_cov][region].get(date):
-						spike_prevalence[spike_cov][region][date] += 1
+			if prot_prevalence.get(prot_cov):
+				if prot_prevalence[prot_cov].get(region):
+					if prot_prevalence[prot_cov][region].get(date):
+						prot_prevalence[prot_cov][region][date] += 1
 					else:
-						spike_prevalence[spike_cov][region][date] = 1
+						prot_prevalence[prot_cov][region][date] = 1
 				else:
-					spike_prevalence[spike_cov][region] = {}
-					spike_prevalence[spike_cov][region][date] = 1
+					prot_prevalence[prot_cov][region] = {}
+					prot_prevalence[prot_cov][region][date] = 1
 			else:
-				spike_prevalence[spike_cov] = {}
-				spike_prevalence[spike_cov][region] = {}
-				spike_prevalence[spike_cov][region][date] = 1
+				prot_prevalence[prot_cov] = {}
+				prot_prevalence[prot_cov][region] = {}
+				prot_prevalence[prot_cov][region][date] = 1
 
-		compress_json.dump(spike_accessions, "data/gisaid_spike_accessions.json.gz")
-		compress_json.dump(spike_prevalence, "data/gisaid_spike_prevalence.json.gz")
-		compress_json.dump(spike_region_date_counts, "data/gisaid_spike_region_date_counts.json.gz")
+		compress_json.dump(prot_accessions, "data/gisaid_"+protein+"_accessions.json.gz")
+		compress_json.dump(prot_prevalence, "data/gisaid_"+protein+"_prevalence.json.gz")
+		compress_json.dump(prot_region_date_counts, "data/gisaid_"+protein+"_region_date_counts.json.gz")
 
-		return (vd.variant_dict_to_df(spike_prevalence, 'gisaid_spike'), 
-			vd.region_date_dict_to_df(spike_region_date_counts, 'gisaid_spike'))
+		return (vd.variant_dict_to_df(prot_prevalence, 'gisaid_'+protein), 
+			vd.region_date_dict_to_df(prot_region_date_counts, 'gisaid_'+protein))
 
 
 
