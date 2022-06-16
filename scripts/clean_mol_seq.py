@@ -89,6 +89,10 @@ class CleanMolSeq(object):
     @staticmethod
     def clean_mol_seqs(infile, outfile, min_length, min_ratio, verbose, qc_storage_outfile, qc_storage_infile = None, protein_file=None, protein_outfile=None,
                        protein_outfile_fasta=None, protein_min_length=0):
+
+        print("Cleaning sequences ...")
+        print('\n')
+        
         genomes = None
         if protein_file:
             genomes = CleanMolSeq.read_protein_fasta_file(protein_file, protein_outfile, protein_min_length)
@@ -152,6 +156,7 @@ class CleanMolSeq(object):
         if genomes:
             CleanMolSeq.extract_from_protein_fasta_file(protein_file, protein_outfile_fasta, keep_proteins_genome_acc)
         
+        print("Quality Control Results ...")
         print('Stringency ratio             : ' + str(min_ratio))
         print('Total Inputed Sequences      : ' + str(total))
         print('Ignored, Missing Metadata    : ' + str(ignored_id))

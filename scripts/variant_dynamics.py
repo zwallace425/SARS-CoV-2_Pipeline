@@ -195,6 +195,7 @@ class VariantDynamics(object):
 	def spatial_temporal_prevalence(ref_fasta, seqs_fasta, variant_mappings = {}, cov_prevalence = {}, 
 		aa_prevalence = {}, prot_cov_prevalence = {}, region_date_counts = {}, qc_storage_file = {}):
 
+		print("Running alignments, computing spatial-temporal counts ...")
 
 		if variant_mappings != {}:
 			variant_mappings = compress_json.load(variant_mappings)
@@ -320,6 +321,8 @@ class VariantDynamics(object):
 		compress_json.dump(region_date_counts, "data/bvbrc_region_date_counts.json.gz")
 		compress_json.dump(qc_storage_file, "data/bvbrc_SARS-CoV-2_Sequence_QC.json.gz")
 
+		print("Done with alignments and region-date counts")
+		print('\n')
 		
 		return (VariantDynamics.variant_dict_to_df(cov_prevalence, 'bvbrc_cov'), 
 			VariantDynamics.variant_dict_to_df(aa_prevalence, 'bvbrc_aa'),
