@@ -28,7 +28,9 @@ alignments and processing.  It is highly advised to have access to HPC resources
 RUNNING PIPELINE: 
 
 cd path/to/local/dir
+
 git clone https://github.com/zwallace425/SARS-CoV-2_Pipeline.git
+
 cd scripts
 
 To score and rank full proteome variant constellations:
@@ -108,6 +110,6 @@ We are continually updating this repository to enhance code efficiency, algorith
 described in the manuscript is not available as that was originally designed for BV-BRC Emerging Variant Report spreadsheets generated from GISAID
 data and used for consulting with the NIAID SAVE Consortium, but we cannot publically share those spreadsheets and code due to GISAID licensing agreements.
 
-For any questions or bug catches please contact Zach Wallace at zwallace@jcvi.org or ask question on GitHub for public discussion.
+For any questions or bug catches please contact Zach Wallace at zwallace@jcvi.org or ask questions on GitHub for public discussion.
 
 
