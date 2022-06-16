@@ -1,3 +1,6 @@
+# Script used for cleaning SARS-CoV-2 sequences in FASTA based on ambiguity and bad metadata
+# Courtesy to Christian Zmasek as the orginal creater of this script
+
 import re
 import pickle
 import compress_json

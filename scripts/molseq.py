@@ -1,3 +1,6 @@
+# Object necessary for QC with clean_mol_seq.py
+# Courtesy to Christian Zmasek as original creater of this code
+
 import textwrap
 
 
