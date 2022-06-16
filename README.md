@@ -4,7 +4,10 @@ This repository contains the code we make public for scoring emerging SARS-CoV-2
 Wallace ZS et al., "Early Detection of Emerging SARS-CoV-2 Variants of Interest for Experimental Evaluation", Frontiers in
 Bioinformatics.
 
-Dependencies: python >=3.x, pandas, edlib, Biopython, collections, typing, compress_json, datetime
+DEPENDENCIES: 
+
+	python >=3.x, pandas, edlib, Biopython, collections, typing, compress_json, datetime
+
 Please use pip install to install these dependencies prior to running the software.
 
 INTRODUCTION: 
