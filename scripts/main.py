@@ -3,6 +3,7 @@
 
 import sys
 import argparse
+import warnings
 import time
 import pandas as pd
 from datetime import date
@@ -12,6 +13,7 @@ from variant_dynamics import VariantDynamics as vd
 from variant_analysis import VariantAnalysis as va
 from variant_scoring import VariantScoring as vs
 
+warnings.filterwarnings("ignore")
 
 BVBRC_PROTEINS = ['nsp1', 'nsp2', 'nsp3', 'nsp4', 'nsp5', 'nsp6', 'nsp7', 'nsp8', 'nsp9', 'nsp10', 'nsp11', 'nsp12', 'nsp13', 'nsp14', 'nsp15', 'nsp16',
 'E', 'M', 'N', 'Spike', 'ORF3a', 'ORF6', 'ORF7a', 'ORF7b', 'ORF8', 'ORF9b', 'ORF10', 'ORF14']

@@ -146,6 +146,9 @@ class VariantAnalysis(object):
 			prevalence_df['Jerk'] = prevalence_df.groupby(['Variant', 'Region'])['Growth'].diff()
 			prevalence_df = prevalence_df.fillna(0)
 
+		prevalence_df['Variant'].replace('', np.nan, inplace=True)
+		prevalence_df.dropna(subset = ['Variant'], inplace = True)
+
 		print("Done computing growth dynamics")
 		print('\n')
 
