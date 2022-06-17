@@ -28,7 +28,9 @@ https://www.viprbrc.org/brcDocs/datafiles/public_share/Corona/. As of now, the p
 those in this repository due to data parsing requirements. WARNING: The FASTA files are large and compute time is long due to
 alignments and processing.  It is highly advised to have access to HPC resources for running on FASTA data.
 
-RUNNING PIPELINE: 
+RUNNING PIPELINE:
+
+Run the following commands to get the pipeline working in your local dir.  Note, every analysis begins with "python main.py"
 
 cd path/to/local/dir
 
@@ -53,6 +55,10 @@ To score and rank single amino acid mutations:
 To score and rank protein-specific amino acid mutations:
 
 	(6) [GISAID or GenBank/BV-BRC args] --protein Spike
+
+The following are optional arguments after one of the required six usage options:
+	
+	[REQUIRED ARGS] --period [D/W/2W/M] --interval [>=2 and <=6] --n_content [>0 and <1] --seq_length [NT Sequence Length] --min_date [>2019-11-01]
 
 The ranking results will be printed to the commandline and automatically deposited in the "results" directory with the current date
 concatenated to the filename.  Please see the file "sample_composite_score.txt" in the "results" directory for an example output.
@@ -101,10 +107,15 @@ Additional files in the "testing" directory:
 
 test_pipeline.py --- test entire pipeline, running through all four files to generate region-time prevalence and growth rates data for each variant 
 	constellation and single mutation
+
 test_gisaid.py --- used for testing gisaid_metadata.py object
+
 test_scoring.py --- used  for testing variant_scoring object
+
 test_variant_analysis.py --- used or testing variant_analysis.py
+
 genomes_test_run.fasta --- 20 genomes sampled from ViPR used for testing the pipeline
+
 SARS2_April_500.fasta -- 500 genomes sampled from ViPR in the month of April 2022 used for testing
 
 FINAL REMARKS:
