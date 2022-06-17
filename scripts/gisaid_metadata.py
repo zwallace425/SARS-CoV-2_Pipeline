@@ -16,7 +16,8 @@ from variant_dynamics import VariantDynamics as vd
 class GisaidMetadata(object):
 
 	# Intialize GISAID metadata dataframe and perform QC on the data
-	def __init__(self, gisaid_df, seq_length = 29400, n_content = 0.05, min_date = '2022-01-01'):
+	def __init__(self, gisaid_df, seq_length = 29400, n_content = 0.01, min_date = '2022-01-01'):
+		print("Preparing GISAID Metadata ...")
 		columns = ['Virus name', 'Accession ID', 'Sequence length', 'AA Substitutions', 'Collection date', 'N-Content']
 		gisaid_kept = gisaid_df[columns]
 		gisaid_kept = gisaid_kept[(gisaid_kept['Sequence length'] > seq_length) & (gisaid_kept['N-Content'] < n_content)]
@@ -26,6 +27,8 @@ class GisaidMetadata(object):
 		gisaid_kept = gisaid_kept.drop_duplicates(subset = ['Accession ID'])
 		gisaid_kept = gisaid_kept[(gisaid_kept['AA Substitutions'] != "()")]
 		gisaid_kept = gisaid_kept.dropna()
+		print("Done preparing GISAID data")
+		print('\n')
 
 		self.gisaid = gisaid_kept
 
@@ -39,6 +42,8 @@ class GisaidMetadata(object):
 		cov_region_date_counts: A dictionary mapping region to date to total isolate counts
 	"""
 	def covariate_counts(self, cov_accessions = {}, cov_prevalence = {}, cov_region_date_counts = {}):
+
+		print("Aggregating covariate region-date counts ...")
 
 		data = self.gisaid
 
@@ -94,6 +99,9 @@ class GisaidMetadata(object):
 		compress_json.dump(cov_prevalence, "data/gisaid_cov_prevalence.json.gz")
 		compress_json.dump(cov_region_date_counts, "data/gisaid_cov_region_date_counts.json.gz")
 
+		print("Done aquiring region-date counts")
+		print('\n')
+
 		return (vd.variant_dict_to_df(cov_prevalence, 'gisaid_cov'), 
         	vd.region_date_dict_to_df(cov_region_date_counts, 'gisaid_cov'))
 	
@@ -108,6 +116,8 @@ class GisaidMetadata(object):
 		aa_region_date_counts: A dictionary mapping region to date to total isolate counts
 	"""
 	def mutation_counts(self, aa_accessions = {}, aa_prevalence = {}, aa_region_date_counts = {}):
+
+		print("Aggregating mutation region-date counts ...")
 
 		data = self.gisaid
 
@@ -148,6 +158,9 @@ class GisaidMetadata(object):
 		compress_json.dump(aa_prevalence, "data/gisaid_aa_prevalence.json.gz")
 		compress_json.dump(aa_region_date_counts, "data/gisaid_aa_region_date_counts.json.gz")
 
+		print("Done aquiring region-date counts")
+		print('\n')
+
 		return (vd.variant_dict_to_df(aa_prevalence, 'gisaid_aa'), 
 			vd.region_date_dict_to_df(aa_region_date_counts, 'gisaid_aa'))
 
@@ -164,6 +177,8 @@ class GisaidMetadata(object):
 		prot_region_date_counts: A dictionary mapping region to date to total isolate counts
 	"""
 	def protein_counts(self, protein, prot_accessions = {}, prot_prevalence = {}, prot_region_date_counts = {}):
+
+		print("Aggregating protein-specific covariate region-date counts ...")
 
 		def num_sort(text):
 			return list(map(int, re.findall(r'\d+', text)))[0]
@@ -225,6 +240,9 @@ class GisaidMetadata(object):
 		compress_json.dump(prot_accessions, "data/gisaid_"+protein+"_accessions.json.gz")
 		compress_json.dump(prot_prevalence, "data/gisaid_"+protein+"_prevalence.json.gz")
 		compress_json.dump(prot_region_date_counts, "data/gisaid_"+protein+"_region_date_counts.json.gz")
+
+		print("Done acquiring protein-specific region-date counts")
+		print('\n')
 
 		return (vd.variant_dict_to_df(prot_prevalence, 'gisaid_'+protein), 
 			vd.region_date_dict_to_df(prot_region_date_counts, 'gisaid_'+protein))
