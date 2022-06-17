@@ -33,6 +33,8 @@ class VariantScoring(object):
 	"""
 	def composite_score(self, spike_sfoc = [], non_spike_sfoc = [], covariates = []):
 
+		print("Computing the Composite Score ...")
+
 		if (len(spike_sfoc) == 0 and len(non_spike_sfoc) == 0):
 			sys.exit("Input Error: Must input Spike SFoC dataframe, Non-Spike SFoC dataframe, or both.")
 		
@@ -40,9 +42,12 @@ class VariantScoring(object):
 		impact_score = VariantScoring.functional_impact_score(covariates = list(prevalence_score['Variant']), spike_sfoc = spike_sfoc, non_spike_sfoc = non_spike_sfoc)
 		composite_score = pd.merge(prevalence_score, impact_score, on = "Variant")
 		composite_score['Composite Score'] = composite_score['Sequence Prevalence Score'] + composite_score['Functional Impact Score']
-		composite_ranking = composite_score.sort_values(by = ['Composite Score'], ascending = [False]).drop_duplicates().reset_index(drop=True)
+		composite_ranking = composite_score.sort_values(by = ['Composite Score'], ascending = [False]).drop_duplicates().reset_index(drop=True).dropna()
+
+		print("Done computing the Composite Score")
+		print('\n')
 		
-		return(composite_ranking)
+		return(composite_ranking.reset_index(drop=True))
 
 
 	# This function computes the sequence prevalence scores of variants and return the variants ranked by score
@@ -60,7 +65,8 @@ class VariantScoring(object):
 		significant_variants = significant_variants[(significant_variants['Prevalence'] > 0.05) | (significant_variants['Growth'] > 5)]
 
 		scores = significant_variants.groupby('Variant').size().reset_index(
-			name = 'Sequence Prevalence Score').sort_values(by = 'Sequence Prevalence Score', ascending = False)
+			name = 'Sequence Prevalence Score').sort_values(by = 'Sequence Prevalence Score', ascending = False).dropna()
+
 
 		return scores.reset_index(drop=True)
 
@@ -88,7 +94,7 @@ class VariantScoring(object):
 		significant_variants = significant_variants[(significant_variants['Prevalence'] > 0.05) | (significant_variants['Growth'] > 5)]
 
 		scores = significant_variants.groupby('Variant').size().reset_index(
-			name = 'Mutation Prevalence Score').sort_values(by = 'Mutation Prevalence Score', ascending = False)
+			name = 'Mutation Prevalence Score').sort_values(by = 'Mutation Prevalence Score', ascending = False).dropna()
 
 		return scores.reset_index(drop=True)
 
@@ -199,7 +205,6 @@ class VariantScoring(object):
 		mutations = covariate.split(",")
 		sfoc_score = 0
 		for j in range(len(mutations)):
-			sfoc_score = 0
 			mutation = mutations[j].split("_")
 			if "Spike" in mutation[0]:
 				continue
@@ -210,8 +215,7 @@ class VariantScoring(object):
 			sfocs = sfoc_df[(sfoc_df['Protein'] == prot) & (sfoc_df['Start'] <= aa_pos) & (sfoc_df['End'] >= aa_pos)]
 			sfocs.reset_index(inplace = True, drop = True)
 			sfoc_score += len(sfocs)
-			print(mutations[j], sfoc_score)
-		print('\n')
+			
 		return sfoc_score
 		
 

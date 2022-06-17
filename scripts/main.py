@@ -30,7 +30,7 @@ def ProgramUsage():
 	print('\n')
 	print("OPTIONAL: The following are optional arguments following the required:")
 	print('\n')
-	print("[REQUIRED ARGS] --period [D/W/2W/M] --interval [>=2 and <=6] --n_content [>=0 and <=1] --seq_length [Sequence Length] --min_date [>2019-11-01] --world [T or F] --protein [SARS-CoV-2 protein]")
+	print("[REQUIRED ARGS] --period [D/W/2W/M] --interval [>=2 and <=6] --n_content [>=0 and <=1] --seq_length [Sequence Length] --min_date [>2019-11-01] --protein [SARS-CoV-2 protein]")
 
 
 # Open GISAID metadata file supplied to command line.
@@ -52,7 +52,7 @@ if __name__ == "__main__":
 	parser.add_argument('--gisaid', dest = 'gisaid', type = str)
 	parser.add_argument('--analyze', dest = 'analyze', type = str)
 	# Or (following two must be together)
-	parser.add_argument('--ref', dest = 'reference', type = str)
+	parser.add_argument('--ref', dest = 'ref', type = str)
 	parser.add_argument('--query', dest = 'query', type = str)
 
 	# Optional arguments
@@ -61,7 +61,6 @@ if __name__ == "__main__":
 	parser.add_argument('--n_content', dest = 'n_content', type = str)
 	parser.add_argument('--seq_length', dest = 'seq_length', type = str)
 	parser.add_argument('--min_date', dest = 'min_date', type = str)
-	parser.add_argument('--world', dest = 'world', type = str)
 	parser.add_argument('--protein', dest = 'protein', type = str)
 	args = parser.parse_args()
 
@@ -72,9 +71,9 @@ if __name__ == "__main__":
 	today = today.strftime("%Y-%m-%d")
 
 	# Exit program if required commandline arguments are incorrect
-	if (args.gisaid and (args.reference or args.query)):
+	if (args.gisaid and (args.ref or args.query)):
 		sys.exit(ProgramUsage())
-	if ((args.reference and (not args.query)) or (args.query and (not args.reference))):
+	if ((args.ref and (not args.query)) or (args.query and (not args.ref))):
 		sys.exit(ProgramUsage())
 	if (args.analyze != "covariates" and args.analyze != "mutations"):
 		sys.exit(ProgramUsage())
@@ -88,21 +87,21 @@ if __name__ == "__main__":
 		period = "M"
 
 	if args.interval:
-		interval = args.interval
-		if (args.interval > 6 or args.interval < 2):
+		interval = int(args.interval)
+		if (interval > 6 or interval < 2):
 			sys.exit(ProgramUsage())
 	else:
 		interval = 3
 	
 	if args.n_content:
-		n_content = args.n_content
-		if (args.n_content <= 0 or args.n_content >= 1):
+		n_content = float(args.n_content)
+		if (n_content <= 0 or n_content >= 1):
 			sys.exit(ProgramUsage())
 	else:
-		n_content = 0.05
+		n_content = 0.01
 	
 	if args.seq_length:
-		seq_length = args.seq_length
+		seq_length = int(args.seq_length)
 	else:
 		seq_length = 29400
 	
@@ -110,16 +109,6 @@ if __name__ == "__main__":
 		min_date = args.min_date
 	else:
 		min_date = "2022-01-01"
-	
-	if args.world:
-		if args.world == "T":
-			world = True
-		elif args.world == "F":
-			world = False
-		else:
-			sys.exit(ProgramUsage())
-	else:
-		world = False
 
 	if args.protein:
 		if (args.gisaid and (args.protein not in GISAID_PROTEINS)):
@@ -137,20 +126,20 @@ if __name__ == "__main__":
 		if (args.analyze == "covariates"):
 			if args.protein:
 				prot_counts_df, prot_region_dates_df = gm_object.protein_counts(args.protein)
-				prot_prevalence_df = va.analyze_dynamics(prot_counts_df, prot_region_dates_df, period, world)
+				prot_prevalence_df = va.analyze_dynamics(prot_counts_df, prot_region_dates_df, period)
 				if args.protein == "Spike":
 					scores = vs(prot_prevalence_df, interval).composite_score(spike_sfoc = spike_sfoc)
 				else:
 					scores = vs(prot_prevalence_df, interval).composite_score(non_spike_sfoc = non_spike_sfoc)
 			else:
 				cov_counts_df, cov_region_dates_df = gm_object.covariate_counts()
-				cov_prevalence_df = va.analyze_dynamics(cov_counts_df, cov_region_dates_df, period, world)
+				cov_prevalence_df = va.analyze_dynamics(cov_counts_df, cov_region_dates_df, period)
 				scores = vs(cov_prevalence_df, interval).composite_score(spike_sfoc = spike_sfoc, non_spike_sfoc = non_spike_sfoc)
 			scores.to_csv("results/gisaid_composite_scores_"+today+".txt", sep = '\t', index = False)
 			print(scores)
 		elif (args.analyze == "mutations"):
 			aa_counts_df, aa_region_dates_df = gm_object.mutation_counts()
-			aa_prevalence_df = va.analyze_dynamics(aa_counts_df, aa_region_dates_df, period, world)
+			aa_prevalence_df = va.analyze_dynamics(aa_counts_df, aa_region_dates_df, period)
 			if (args.protein):
 				if args.protein == "Spike":
 					spike_scores = vs(aa_prevalence_df, interval).mutation_prevalence_score(Spike = True)
@@ -179,18 +168,18 @@ if __name__ == "__main__":
 
 		if (args.analyze == "covariates"):
 			if args.protein:
-				cov_prevalence_df = va.analyze_protein_covariates(prot_counts_dict, region_dates_df, args.protein, period, world)
+				cov_prevalence_df = va.analyze_protein_covariates(prot_counts_dict, region_dates_df, args.protein, period)
 				if args.protein == "Spike":
 					scores = vs(cov_prevalence_df, interval).composite_score(spike_sfoc = spike_sfoc)
 				else:
 					scores = vs(cov_prevalence_df, interval).composite_score(non_spike_sfoc = non_spike_sfoc)
 			else:
-				cov_prevalence_df = va.analyze_dynamics(cov_counts_df, region_dates_df, period, world)
+				cov_prevalence_df = va.analyze_dynamics(cov_counts_df, region_dates_df, period)
 				scores = vs(cov_prevalence_df, interval).composite_score(spike_sfoc = spike_sfoc, non_spike_sfoc = non_spike_sfoc)
 			scores.to_csv("results/bvbrc_composite_scores_"+today+".txt", sep = '\t', index = False)
 			print(scores)
 		elif (args.analyze == "mutations"):
-			aa_prevalence_df = va.analyze_dynamics(aa_counts_df, region_dates_df, period, world)
+			aa_prevalence_df = va.analyze_dynamics(aa_counts_df, region_dates_df, period)
 			if (args.protein):
 				if args.protein == "Spike":
 					spike_scores = vs(aa_prevalence_df, interval).mutation_prevalence_score(Spike = True)
