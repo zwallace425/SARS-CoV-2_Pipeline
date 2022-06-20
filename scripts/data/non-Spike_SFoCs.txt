@@ -28,8 +28,8 @@ NSP3	Mutagenesis	820	820
 NSP3	Active site/Mutagenesis	856	856
 NSP3	Mutagenesis	1013	1013
 NSP3	Active site	1017	1017
-NSP3	Active site	41	41
-NSP3	Active site	145	145
+NSP5	Active site	41	41
+NSP5	Active site	145	145
 NSP12	Drug Resistance	166	166
 NSP12	Drug Resistance	479	479
 NSP12	Drug Resistance	483	483
