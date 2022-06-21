@@ -4,7 +4,6 @@
 import sys
 import argparse
 import warnings
-import time
 import pandas as pd
 from datetime import date
 from clean_mol_seq import CleanMolSeq as cms
@@ -114,15 +113,24 @@ if __name__ == "__main__":
 
 	if args.protein:
 		if (args.gisaid and (args.protein not in GISAID_PROTEINS)):
-			sys.exit("Invalid GISAID SARS-CoV-2 protein entry")
+			print('\n')
+			print("Invalid GISAID SARS-CoV-2 protein entry.")
+			print('\n')
+			print("Valid GISAID protein entries:", GISAID_PROTEINS)
+			print('\n')
+			sys.exit()
 		elif (args.ref and (args.protein not in BVBRC_PROTEINS)):
-			sys.exit("Invalid BV-BRC SARS-CoV-2 protein entry")
+			print('\n')
+			print("Invalid BV-BRC SARS-CoV-2 protein entry.")
+			print('\n')
+			print("Valid BV-BRC protein entries:", BVBRC_PROTEINS)
+			print('\n')
+			sys.exit()
 
 
 
 	# Running the pipline on GISAID metadata or GenBank/BV-BRC fasta data
 	if args.gisaid:
-		start = time.time()
 		gisaid = open_gisaid_metadata(args.gisaid)
 		gm_object = gm(gisaid, seq_length, n_content, min_date)
 		if (args.analyze == "covariates"):
@@ -137,7 +145,7 @@ if __name__ == "__main__":
 				cov_counts_df, cov_region_dates_df = gm_object.covariate_counts()
 				cov_prevalence_df = va.analyze_dynamics(cov_counts_df, cov_region_dates_df, period)
 				scores = vs(cov_prevalence_df, interval).composite_score(spike_sfoc = spike_sfoc, non_spike_sfoc = non_spike_sfoc)
-			scores.to_csv("results/gisaid_composite_scores_"+today+".txt", sep = '\t', index = False)
+			scores.to_csv("results/gisaid_composite_scores_"+period+"_"+today+".txt", sep = '\t', index = False)
 			print(scores)
 		elif (args.analyze == "mutations"):
 			aa_counts_df, aa_region_dates_df = gm_object.mutation_counts()
@@ -145,22 +153,20 @@ if __name__ == "__main__":
 			if (args.protein):
 				if args.protein == "Spike":
 					spike_scores = vs(aa_prevalence_df, interval).mutation_prevalence_score(Spike = True)
-					spike_scores.to_csv("results/gisaid_spike_mutation_scores"+today+".txt", sep = '\t', index = False)
+					spike_scores.to_csv("results/gisaid_spike_mutation_scores"+period+"_"+today+".txt", sep = '\t', index = False)
 					print(spike_scores)
 				else:
 					non_spike_scores = vs(aa_prevalence_df, interval).mutation_prevalence_score(nonSpike = True)
 					non_spike_scores = non_spike_scores[non_spike_scores['Variant'].str.contains(args.protein)]
-					non_spike_scores.to_csv("results/gisaid_"+args.protein+"_mutation_scores"+today+".txt", sep = '\t', index = False)
+					non_spike_scores.to_csv("results/gisaid_"+args.protein+"_mutation_scores"+period+"_"+today+".txt", sep = '\t', index = False)
 					print(non_spike_scores)
 			else:
-				spike_scores.to_csv("results/gisaid_spike_mutation_scores"+today+".txt", sep = '\t', index = False)
-				non_spike_scores.to_csv("results/gisaid_non_spike_mutation_scores"+today+".txt", sep = '\t', index = False)
+				spike_scores.to_csv("results/gisaid_spike_mutation_scores"+period+"_"+today+".txt", sep = '\t', index = False)
+				non_spike_scores.to_csv("results/gisaid_non_spike_mutation_scores"+period+"_"+today+".txt", sep = '\t', index = False)
 				print(spike_scores)
 				print('\n')
 				print(non_spike_scores)
-		end = time.time()
 
-		print("Time:", end - start)
 
 	elif args.reference:
 		
@@ -178,23 +184,23 @@ if __name__ == "__main__":
 			else:
 				cov_prevalence_df = va.analyze_dynamics(cov_counts_df, region_dates_df, period)
 				scores = vs(cov_prevalence_df, interval).composite_score(spike_sfoc = spike_sfoc, non_spike_sfoc = non_spike_sfoc)
-			scores.to_csv("results/bvbrc_composite_scores_"+today+".txt", sep = '\t', index = False)
+			scores.to_csv("results/bvbrc_composite_scores_"+period+"_"+today+".txt", sep = '\t', index = False)
 			print(scores)
 		elif (args.analyze == "mutations"):
 			aa_prevalence_df = va.analyze_dynamics(aa_counts_df, region_dates_df, period)
 			if (args.protein):
 				if args.protein == "Spike":
 					spike_scores = vs(aa_prevalence_df, interval).mutation_prevalence_score(Spike = True)
-					spike_scores.to_csv("results/bvbrc_spike_mutation_scores"+today+".txt", sep = '\t', index = False)
+					spike_scores.to_csv("results/bvbrc_spike_mutation_scores"+period+"_"+today+".txt", sep = '\t', index = False)
 					print(spike_scores)
 				else:
 					non_spike_scores = vs(aa_prevalence_df, interval).mutation_prevalence_score(nonSpike = True)
 					non_spike_scores = non_spike_scores[non_spike_scores['Variant'].str.contains(args.protein)]
-					non_spike_scores.to_csv("results/bvbrc_"+args.protein+"_mutation_scores"+today+".txt", sep = '\t', index = False)
+					non_spike_scores.to_csv("results/bvbrc_"+args.protein+"_mutation_scores"+period+"_"+today+".txt", sep = '\t', index = False)
 					print(non_spike_scores)
 			else:
-				spike_scores.to_csv("results/bvbrc_spike_mutation_scores"+today+".txt", sep = '\t', index = False)
-				non_spike_scores.to_csv("results/bvbrc_non_spike_mutation_scores"+today+".txt", sep = '\t', index = False)
+				spike_scores.to_csv("results/bvbrc_spike_mutation_scores"+period+"_"+today+".txt", sep = '\t', index = False)
+				non_spike_scores.to_csv("results/bvbrc_non_spike_mutation_scores"+period+"_"+today+".txt", sep = '\t', index = False)
 				print(spike_scores)
 				print('\n')
 				print(non_spike_scores)
