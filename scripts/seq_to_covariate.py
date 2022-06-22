@@ -191,10 +191,6 @@ class SeqToCovariate(object):
 					a = prev_gene+"_"+str(prev_pos)+"-"
 			a = a+str(prev_pos)
 			ambig_chunks.append(a)
-			prev_gene = ambig_gene
-			prev_pos = ambig_pos
-			a = prev_gene+"_"+str(prev_pos)+"-"
-			
 			ambig_chunks = ','.join(ambig_chunks)
 		else:
 			ambig_chunks = "None"

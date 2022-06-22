@@ -13,7 +13,9 @@ import compress_json
 import pandas as pd
 from datetime import datetime
 from Bio import SeqIO
-import seq_to_covariate as stc
+import molseq
+from clean_mol_seq import CleanMolSeq as cms
+from seq_to_covariate import SeqToCovariate as stc
 
 class VariantDynamics(object):
 
@@ -197,6 +199,9 @@ class VariantDynamics(object):
 
 		print("Running alignments, computing spatial-temporal counts ...")
 
+		ref_fasta = open(ref_fasta)
+		seqs_fasta = open(seqs_fasta)
+
 		if variant_mappings != {}:
 			variant_mappings = compress_json.load(variant_mappings)
 		if cov_prevalence != {}:
@@ -214,21 +219,19 @@ class VariantDynamics(object):
 			new_storage = True
 
 		
-		for seq_record in SeqIO.parse(ref_fasta, 'fasta'):
-			ref = seq_record.seq
+		for mol_seq in cms.stream_fasta(ref_fasta, True):
+			ref = mol_seq.get_seq()
 
-		for seq_record in SeqIO.parse(seqs_fasta, 'fasta'):
-			acc = str(seq_record.id.split("|")[1])
-			date = str(seq_record.id.split("|")[2])
-			date = date.replace("_", "-")
-			region = str(seq_record.id.split("|")[4])
-			seq = str(seq_record.seq)
-			if region == "USA":
-				seq_id = str(seq_record.id.split("|")[0])
-				loc_id = str(seq_id.split("/")[3])
-				state = loc_id.split("_")[0]
+		for mol_seq in cms.stream_fasta(seqs_fasta, True):
+			acc = str(mol_seq.get_seq_id().split('|')[1])
+			date = str(mol_seq.get_seq_id().split('gb_collection_date:')[1])
+			date = date.replace('_', '-')
+			region = str(mol_seq.get_seq_id().split('Country:')[1].split('|')[0])
+			seq = str(mol_seq.get_seq())
+			if region == 'USA':
+				state = str(mol_seq.get_seq_id().split('Strain:')[1].split('|')[0].split('/')[3].replace('_','-').split('-')[0])
 				if (state.isalpha() and len(state) == 2):
-					region = str("USA_"+state)
+					region = str('USA_'+state)
 					if new_storage:
 						qc_storage_file[acc] = {}
 						qc_storage_file[acc]['sequence'] = seq
@@ -244,7 +247,7 @@ class VariantDynamics(object):
 						qc_storage_file[acc]['QC'] = 'Fail: US Region'
 					continue
 			if not(variant_mappings.get(seq)):
-				all_mutations = stc.SeqToCovariate.mutations(ref, seq)
+				all_mutations = stc.mutations(ref, seq)
 				if all_mutations == 'BAD_SEQUENCE':
 					if new_storage:
 						qc_storage_file[acc] = {}
@@ -321,6 +324,9 @@ class VariantDynamics(object):
 		compress_json.dump(region_date_counts, "data/bvbrc_region_date_counts.json.gz")
 		compress_json.dump(qc_storage_file, "data/bvbrc_SARS-CoV-2_Sequence_QC.json.gz")
 
+		ref_fasta.close()
+		seqs_fasta.close()
+
 		print("Done with alignments and region-date counts")
 		print('\n')
 		
@@ -328,53 +334,6 @@ class VariantDynamics(object):
 			VariantDynamics.variant_dict_to_df(aa_prevalence, 'bvbrc_aa'),
 			prot_cov_prevalence,
 			VariantDynamics.region_date_dict_to_df(region_date_counts))
-
-
-	# This function computes covariate prevalence for an entire pool of sequences in some fasta file. 
-	# It does not compute prevalence by date and region.  It also returns accessions for each covariate
-	# as a dictionary.  This function is mainly used for quality control purposes, not a step for analysis
-	# in the pipeline.
-	"""Parameters:
-		ref_fasta: SARS-CoV-2 reference sequence as fasta
-		seqs_fasta: SARS-CoV-2 query sequences as fasta
-	"""
-	@staticmethod
-	def covariate_prevalence(ref_fasta, seqs_fasta):
-
-		cov_mappings = {}
-		cov_prevalence = {}
-		cov_accessions = {}
-
-		for seq_record in SeqIO.parse(ref_fasta, 'fasta'):
-			ref = seq_record.seq
-
-		for seq_record in SeqIO.parse(seqs_fasta, 'fasta'):
-			acc = seq_record.id.split("|")[1]
-			seq = seq_record.seq
-			seq_file = open("last_sequence.txt", "w")
-			seq_file.write(str(seq))
-			seq_file.close()
-			if not(cov_mappings.get(seq)):
-				all_mutations = stc.SeqToCovariate.mutations(ref, seq)
-				if all_mutations == 'BAD_SEQUENCE':
-					continue
-				cov = all_mutations[2]
-				if cov_prevalence.get(cov):
-					cov_prevalence[cov] += 1
-					cov_accessions[acc] = cov
-				else:
-					cov_prevalence[cov] = 1
-					cov_accessions[acc] = cov
-					cov_mappings[seq] = cov
-			else:
-				cov = cov_mappings[seq]
-				cov_prevalence[cov] += 1
-				cov_accessions[acc] = cov
-
-		for key in cov_prevalence:
-			cov_prevalence[key] = cov_prevalence[key] / len(cov_accessions)
-
-		return cov_prevalence, cov_accessions
 
 
 if __name__ == "__main__":

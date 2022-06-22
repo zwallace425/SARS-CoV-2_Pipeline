@@ -2,6 +2,7 @@
 # See the README.md for details
 
 import sys
+import time
 import argparse
 import warnings
 import pandas as pd
@@ -168,11 +169,12 @@ if __name__ == "__main__":
 				print(non_spike_scores)
 
 
-	elif args.reference:
+	elif args.ref:
 		
+		start = time.time()
 		clean_sequences = "data/clean_sequences.fasta"
 		kept_acc = cms.clean_mol_seqs(args.query, clean_sequences, seq_length, 1 - n_content, True, 'data/SARS-CoV-2_Sequence_QC.json.gz')
-		cov_counts_df, aa_counts_df, prot_counts_dict, region_dates_df = vd.spatial_temporal_prevalence(args.reference, clean_sequences, qc_storage_file = 'data/SARS-CoV-2_Sequence_QC.json.gz')
+		cov_counts_df, aa_counts_df, prot_counts_dict, region_dates_df = vd.spatial_temporal_prevalence(args.ref, clean_sequences, qc_storage_file = 'data/SARS-CoV-2_Sequence_QC.json.gz')
 
 		if (args.analyze == "covariates"):
 			if args.protein:
@@ -204,6 +206,9 @@ if __name__ == "__main__":
 				print(spike_scores)
 				print('\n')
 				print(non_spike_scores)
+
+		end = time.time()
+		print("Total run time:", end - start)
 			
 
 

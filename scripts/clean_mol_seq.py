@@ -1,4 +1,6 @@
-# Script used for cleaning SARS-CoV-2 sequences in FASTA based on ambiguity and bad metadata
+# Script used for cleaning SARS-CoV-2 sequences in FASTA based on ambiguity and bad metadata.
+# This will ONLY accept FASTA downloaded in the format from:
+# https://www.viprbrc.org/brcDocs/datafiles/public_share/Corona/
 # Courtesy to Christian Zmasek as the orginal creater of this script
 
 import re
@@ -107,6 +109,8 @@ class CleanMolSeq(object):
         ignored_name = 0
         ignored_no_protein = 0
         ignored_id = 0
+        ignored_region = 0
+        ignored_date = 0
         kept = 0
         keep_proteins_genome_acc = set()
         keep_genome_acc = set()
@@ -121,6 +125,8 @@ class CleanMolSeq(object):
         for mol_seq in CleanMolSeq.stream_fasta(f0, True):
             name_lwr = mol_seq.get_seq_id().lower()
             acc = mol_seq.get_seq_id().split('|')[1]
+            country = mol_seq.get_seq_id().split('Country:')[1].split('|')[0]
+            date = mol_seq.get_seq_id().split('gb_collection_date:')[1]
             if storage.get(acc): # If we come accross an already processess genome accession, skip it.
                 continue
             seq = mol_seq.get_seq()
@@ -132,21 +138,29 @@ class CleanMolSeq(object):
             storage[acc]['length'] = length
             storage[acc]['ambiguity'] = 1 - r
             total += 1
-            if len(name_lwr.split("|")) == 6:
-                if '|severe_acute_respiratory_syndrome_related_coronavirus' in name_lwr or '2019_ncov' in name_lwr or 'hcov_19' in name_lwr or 'sars_cov_2' in name_lwr or 'sars_cov2' in name_lwr:
-                    if length >= min_length:
-                        if r >= min_ratio:
-                            storage[acc]['QC'] = 'Pass'
-                            keep_genome_acc.add(acc)
-                            kept += 1
-                            f1.write(mol_seq.to_fasta_wrapped(80))
-                            f1.write('\n')
+            if len(name_lwr.split("|")) >= 6:
+                if 'severe acute respiratory syndrome coronavirus 2' in name_lwr or 'sars-cov-2' in name_lwr or 'sars-cov2' in name_lwr or 'sars_cov_2' in name_lwr or 'sars_cov2' in name_lwr:
+                    if date != '':
+                        if country != '':
+                            if length >= min_length:
+                                if r >= min_ratio:
+                                    storage[acc]['QC'] = 'Pass'
+                                    keep_genome_acc.add(acc)
+                                    kept += 1
+                                    f1.write(mol_seq.to_fasta_wrapped(80))
+                                    f1.write('\n')
+                                else:
+                                    storage[acc]['QC'] = 'Fail: Ambiguity'
+                                    ignored_irr_chars += 1
+                            else:
+                                storage[acc]['QC'] = 'Fail: Length'
+                                ignored_length += 1
                         else:
-                            storage[acc]['QC'] = 'Fail: Ambiguity'
-                            ignored_irr_chars += 1
+                            storage[acc]['QC'] = 'Fail: Region'
+                            ignored_region += 1
                     else:
-                        storage[acc]['QC'] = 'Fail: Length'
-                        ignored_length += 1
+                        storage[acc]['QC'] = 'Fail: Date'
+                        ignored_date += 1
                 else:
                     storage[acc]['QC'] = 'Fail: Name'
                     ignored_name += 1
@@ -166,6 +180,8 @@ class CleanMolSeq(object):
         print('Ignored, Wrong Name          : ' + str(ignored_name))
         print('Ignored, Bad Length          : ' + str(ignored_length))
         print('Ignored, Irreg Chars         : ' + str(ignored_irr_chars))
+        print('Ignored, No Region           : ' + str(ignored_region))
+        print('Ignored, No Date             : ' + str(ignored_date))
         print('Sequences Kept               : ' + str(kept))
         print('\n')
 
