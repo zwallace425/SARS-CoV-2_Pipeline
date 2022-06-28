@@ -228,10 +228,6 @@ class VariantDynamics(object):
 			date = date.replace('_', '-')
 			region = mol_seq.get_seq_id().split('Country:')[1].split('|')[0]
 			seq = mol_seq.get_seq()
-			fasta = mol_seq.to_fasta()
-			with open('single_bvbrc_seq.fasta', 'w') as f:
-				f.write(fasta)
-			f.close()
 			if region == 'USA':
 				state = str(mol_seq.get_seq_id().split('Strain:')[1].split('|')[0].split('/'))
 				if (len(state) < 4):
