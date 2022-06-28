@@ -21,18 +21,28 @@ BVBRC_PROTEINS = ['nsp1', 'nsp2', 'nsp3', 'nsp4', 'nsp5', 'nsp6', 'nsp7', 'nsp8'
 GISAID_PROTEINS = ['NSP1', 'NSP2', 'NSP3', 'NSP4', 'NSP5', 'NSP6', 'NSP7', 'NSP8', 'NSP9', 'NSP10', 'NSP11', 'NSP12', 'NSP13', 'NSP14', 'NSP15', 'NSP16',
 'E', 'M', 'N', 'Spike', 'NS3', 'NS6', 'NS7a', 'NS7b', 'NS8']
 
+WHO_NAMES = ['Omicron', 'Delta', 'Alpha', 'Beta', 'Mu', 'Iota', 'Epsilon', 'Gamma', 'Eta', 'Kappa', 'Zeta', 'Lambda', 'Theta']
+
 # Requirements for running the pipeline
 def ProgramUsage():
 	print('\n')
 	print("USAGE: Commandline must have the minimum arguments:")
 	print('\n')
-	print("python main.py --gisaid [GISAID Metadata File] --analyze [covariates/mutations]")
+	print("For GISAID Data:")
+	print("python main.py --gisaid [GISAID Metadata File] --analyze [covariates/mutations/lineages]")
 	print("OR")
+	print("For GenBank/BV-BRC Data:")
 	print("python main.py --ref NC_045512.2.fasta --query [FASTA file] --analyze [covariates/mutations]")
 	print('\n')
 	print("OPTIONAL: The following are optional arguments following the required:")
 	print('\n')
-	print("[REQUIRED ARGS] --period [D/W/2W/M] --interval [>=2 and <=6] --n_content [>=0 and <=1] --seq_length [Sequence Length] --min_date [>2019-11-01] --protein [SARS-CoV-2 protein]")
+	print("[GISAID args] --WHO [WHO Name]")
+	print("[GISAID args] --PANGO [PANGO Lineage]")
+	print("[GISAID or GenBank/BV-BRC args] --period [D/W/2W/M] --interval [>=2 and <=6] --n_content [>=0 and <=1] --seq_length [Sequence Length] --min_date [>2019-11-01] --protein [SARS-CoV-2 protein]")
+	print('\n')
+	print("NOTE: WHO or PANGO input only allowed with GISAID metadata")
+	print("NOTE: WHO or PANGO input not allowed with '--analyze lineages'. Unecessary analysis.")
+	print('\n')
 
 
 # Open GISAID metadata file supplied to command line.
@@ -64,20 +74,30 @@ if __name__ == "__main__":
 	parser.add_argument('--seq_length', dest = 'seq_length', type = str)
 	parser.add_argument('--min_date', dest = 'min_date', type = str)
 	parser.add_argument('--protein', dest = 'protein', type = str)
+	parser.add_argument('--WHO', dest = "who", type = str)
+	parser.add_argument('--PANGO', dest = "pango", type = str)
 	args = parser.parse_args()
 
 	spike_sfoc = pd.read_csv("data/Spike_SFoCs.txt", sep = '\t')
 	non_spike_sfoc = pd.read_csv("data/Non-Spike_SFoCs.txt", sep = '\t')
 
-	today = date.today()
-	today = today.strftime("%Y-%m-%d")
+	today = date.today().strftime("%Y-%m-%d")
+	min_date = date(date.today().year, 1, 1).strftime("%Y-%m-%d")
 
 	# Exit program if required commandline arguments are incorrect
 	if (args.gisaid and (args.ref or args.query)):
 		sys.exit(ProgramUsage())
 	if ((args.ref and (not args.query)) or (args.query and (not args.ref))):
 		sys.exit(ProgramUsage())
-	if (args.analyze != "covariates" and args.analyze != "mutations"):
+	if (args.ref and (args.analyze == "lineages")):
+		sys.exit(ProgramUsage())
+	if (args.ref and (args.who or args.pango)):
+		sys.exit(ProgramUsage())
+	if (args.analyze != "covariates" and args.analyze != "mutations" and args.analyze != "lineages"):
+		sys.exit(ProgramUsage())
+	if (args.who and args.pango):
+		sys.exit(ProgramUsage())
+	if (args.analyze == "lineages" and (args.who or args.pango)):
 		sys.exit(ProgramUsage())
 	
 	# Initialize optional arguments
@@ -109,8 +129,23 @@ if __name__ == "__main__":
 	
 	if args.min_date:
 		min_date = args.min_date
+
+	if args.who:
+		who = args.who
+		if who not in WHO_NAMES:
+			print('\n')
+			print("Invalid WHO name.")
+			print('\n')
+			print("Valid WHO names:", WHO_NAMES)
+			print('\n')
+			sys.exit()
 	else:
-		min_date = "2022-01-01"
+		who = None
+
+	if args.pango:
+		pango = args.pango
+	else:
+		pango = None
 
 	if args.protein:
 		if (args.gisaid and (args.protein not in GISAID_PROTEINS)):
@@ -133,7 +168,7 @@ if __name__ == "__main__":
 	# Running the pipline on GISAID metadata or GenBank/BV-BRC fasta data
 	if args.gisaid:
 		gisaid = open_gisaid_metadata(args.gisaid)
-		gm_object = gm(gisaid, seq_length, n_content, min_date)
+		gm_object = gm(gisaid, seq_length, n_content, min_date, who, pango)
 		if (args.analyze == "covariates"):
 			if args.protein:
 				prot_counts_df, prot_region_dates_df = gm_object.protein_counts(args.protein)
@@ -162,11 +197,25 @@ if __name__ == "__main__":
 					non_spike_scores.to_csv("results/gisaid_"+args.protein+"_mutation_scores"+period+"_"+today+".txt", sep = '\t', index = False)
 					print(non_spike_scores)
 			else:
+				spike_scores = vs(aa_prevalence_df, interval).mutation_prevalence_score(Spike = True)
+				non_spike_scores = vs(aa_prevalence_df, interval).mutation_prevalence_score(nonSpike = True)
 				spike_scores.to_csv("results/gisaid_spike_mutation_scores"+period+"_"+today+".txt", sep = '\t', index = False)
 				non_spike_scores.to_csv("results/gisaid_non_spike_mutation_scores"+period+"_"+today+".txt", sep = '\t', index = False)
+				print("Spike mutations ...")
 				print(spike_scores)
 				print('\n')
+				print("Non-Spike mutations ...")
 				print(non_spike_scores)
+		elif (args.analyze == "lineages"):
+			lineage_counts_df, lineage_region_dates_df = gm_object.lineage_counts()
+			print(lineage_counts_df)
+			lineage_prevalence_df = va.analyze_dynamics(lineage_counts_df, lineage_region_dates_df, period)
+			print(lineage_prevalence_df)
+			scores = vs(lineage_prevalence_df, interval).emerging_lineage_score()
+			scores.to_csv("results/gisaid_lineage_scores"+period+"_"+today+".txt", sep = '\t', index = False)
+			print(scores)
+
+
 
 
 	elif args.ref:

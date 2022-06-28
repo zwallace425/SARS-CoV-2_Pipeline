@@ -78,6 +78,8 @@ class VariantScoring(object):
 		nonSpike: Boolean True or false to determine if only nonSpike mutations should be scored
 	"""
 	def mutation_prevalence_score(self, Spike = False, nonSpike = False):
+
+		print("Computing Mutation Prevalence Score ...")
 		
 		if (Spike and nonSpike):
 			sys.exit("Invalid Input: Only Spike or nonSpike may be set to boolean True, got True and True")
@@ -95,6 +97,30 @@ class VariantScoring(object):
 
 		scores = significant_variants.groupby('Variant').size().reset_index(
 			name = 'Mutation Prevalence Score').sort_values(by = 'Mutation Prevalence Score', ascending = False).dropna()
+
+		print("Done computing Mutation Prevalence Score.")
+		print('\n')
+
+		return scores.reset_index(drop=True)
+
+
+	# This function compute the emerging lineage score for PANGO Lineages and returns the lineages ranked by the score.
+	# This function does not recieve any parameters. 
+	def emerging_lineage_score(self):
+
+		print("Computing Emerging Lineage Score ...")
+
+		variants_df = self.variants
+
+		variants_df = variants_df.rename(columns = {'Variant': 'PANGO Lineage'})
+		significant_variants = variants_df[(variants_df['Variant Count'] > 10)]
+		significant_variants = significant_variants[(significant_variants['Growth'] > 15)]
+
+		scores = significant_variants.groupby('PANGO Lineage').size().reset_index(
+			name = 'Emerging Lineage Score').sort_values(by = 'Emerging Lineage Score', ascending = False).dropna()
+
+		print("Done computing Emerging Lineage Score.")
+		print('\n')
 
 		return scores.reset_index(drop=True)
 

@@ -205,7 +205,7 @@ class SeqToCovariate(object):
 	# returns the nonsynonymous and synonymous mutations as disjoint lists
 	"""Paramaters:
 		ref: SARS-CoV-2 reference sequence, processed fasta, just the string
-		muts: Tuple of nucleotide mutations denoted as (position, alt)
+		muts: List of tuples of nucleotide mutations denoted as (position, alt)
 	"""
 	@staticmethod
 	def non_and_syn_mutations(ref, muts):
@@ -261,8 +261,8 @@ class SeqToCovariate(object):
 	# Takes in a reference nucleotide sequence and the query sequence, and returns non-synonymous mutations, 
 	# synonymous mutations, and the covariate (constellation of amino acid substituions)
 	"""Parameters:
-		ref: SARS-CoV-2 reference sequence, processed fasta, just the string
-		seq: SARS-CoV-2 query sequence, processed fasta, just the string
+		ref: SARS-CoV-2 reference sequence, processed fasta, just the nucleotide sequence string
+		seq: SARS-CoV-2 query sequence, processed fasta, just the nucleotide sequence string
 	"""
 	@staticmethod
 	def mutations(ref, seq):

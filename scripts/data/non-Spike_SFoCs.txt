@@ -9,8 +9,14 @@ nsp3	Mutagenesis	820	820
 nsp3	Active site/Mutagenesis	856	856
 nsp3	Mutagenesis	1013	1013
 nsp3	Active site	1017	1017
+nsp5	Drug Resistance	21	21
 nsp5	Active site	41	41
+nsp5	Drug Resistance	50	50
 nsp5	Active site	145	145
+nsp5	Drug Resistance	166	166
+nsp5	Drug Resistance	167	167
+nsp5	Drug Resistance	173	173
+nsp5	Drug Resistance	304	304
 nsp12	Drug Resistance	166	166
 nsp12	Drug Resistance	479	479
 nsp12	Drug Resistance	483	483
@@ -28,8 +34,14 @@ NSP3	Mutagenesis	820	820
 NSP3	Active site/Mutagenesis	856	856
 NSP3	Mutagenesis	1013	1013
 NSP3	Active site	1017	1017
+NSP5	Drug Resistance	21	21
 NSP5	Active site	41	41
+NSP5	Drug Resistance	50	50
 NSP5	Active site	145	145
+NSP5	Drug Resistance	166	166
+NSP5	Drug Resistance	167	167
+NSP5	Drug Resistance	173	173
+NSP5	Drug Resistance	304	304
 NSP12	Drug Resistance	166	166
 NSP12	Drug Resistance	479	479
 NSP12	Drug Resistance	483	483

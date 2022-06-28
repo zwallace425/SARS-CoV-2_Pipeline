@@ -16,9 +16,14 @@ from variant_dynamics import VariantDynamics as vd
 class GisaidMetadata(object):
 
 	# Intialize GISAID metadata dataframe and perform QC on the data
-	def __init__(self, gisaid_df, seq_length = 29400, n_content = 0.01, min_date = '2022-01-01'):
+	def __init__(self, gisaid_df, seq_length = 29400, n_content = 0.01, min_date = '2022-01-01', WHO = None, PANGO = None):
+		
 		print("Preparing GISAID Metadata ...")
-		columns = ['Virus name', 'Accession ID', 'Sequence length', 'AA Substitutions', 'Collection date', 'N-Content']
+		
+		if WHO and PANGO:
+			sys.exit("Input Error: WHO name and PANGO Lineage name not allowed to be iputted together.")
+		
+		columns = ['Virus name', 'Accession ID', 'Sequence length', 'AA Substitutions', 'Variant', 'Pango lineage','Collection date', 'N-Content']
 		gisaid_kept = gisaid_df[columns]
 		gisaid_kept = gisaid_kept[(gisaid_kept['Sequence length'] > seq_length) & (gisaid_kept['N-Content'] < n_content)]
 		gisaid_kept['Collection date'] = pd.to_datetime(gisaid_kept['Collection date'])
@@ -27,41 +32,27 @@ class GisaidMetadata(object):
 		gisaid_kept = gisaid_kept.drop_duplicates(subset = ['Accession ID'])
 		gisaid_kept = gisaid_kept[(gisaid_kept['AA Substitutions'] != "()")]
 		gisaid_kept = gisaid_kept.dropna()
+
 		print("Done preparing GISAID data")
 		print('\n')
 
 		self.gisaid = gisaid_kept
+		self.who = WHO
+		self.pango = PANGO
 
 
-	# The functions collects the covariate counts by region-date from the GISAID metadata file. If passed in
-	# and exisiting list of accessions, it will only compute on the new accessions and update the exisiting covariate
-	# prevalence JSON file as well as the region-date counts dictionary file
-	"""Parameters:
-		cov_accessions: A dictionary mapping GISAID acession to full covariate
-		cov_prevalence: A dictionariy mapping covariate to region to date to counts
-		cov_region_date_counts: A dictionary mapping region to date to total isolate counts
-	"""
-	def covariate_counts(self, cov_accessions = {}, cov_prevalence = {}, cov_region_date_counts = {}):
+	# The function collects the covariate counts by region-date from the GISAID metadata file.
+	def covariate_counts(self):
 
 		print("Aggregating covariate region-date counts ...")
 
 		data = self.gisaid
-
-		if (cov_accessions != {} or cov_prevalence != {} or cov_region_date_counts != {}):
-			if (cov_accessions == {} or cov_prevalence == {} or cov_region_date_counts == {}):
-				sys.exit("Input Error: accessions, prevalence counts, and region-date counts must all be inputted or none inputed for GISAID analysis.")
-		
-		if cov_accessions != {}:
-			cov_accessions = compress_json.load(cov_accessions)
-			cov_prevalence = compress_json.load(cov_prevalence)
-			cov_region_date_counts = compress_json.load(cov_region_date_counts)
-			data = data[(not data['Acession ID'].isin(cov_accessions.keys()))]
-	
+		cov_prevalence = {}
+		cov_region_date_counts = {}
 
 		for ind in data.index:
 			name = data['Virus name'][ind].split("/")
 			region = name[1]
-			acc = data['Accession ID'][ind]
 			date = data['Collection date'][ind]
 			date = date.strftime('%Y-%m-%d')
 
@@ -74,12 +65,28 @@ class GisaidMetadata(object):
 				cov_region_date_counts[region] = {}
 				cov_region_date_counts[region][date] = 1
 
-			cov = data['AA Substitutions'][ind]
+			if self.who:
+				data_type = 'gisaid_'+self.who+'_cov'
+				clade = data['Variant'][ind]
+				if self.who in clade:
+					cov = data['AA Substitutions'][ind]
+				else:
+					continue
+			elif self.pango:
+				data_type = 'gisaid_'+self.pango+'_cov'
+				pango_lineage = data['Pango lineage'][ind]
+				if self.pango in pango_lineage:
+					cov = data['AA Substitutions'][ind]
+				else:
+					continue
+			else:
+				data_type = 'gisaid_cov'
+				cov = data['AA Substitutions'][ind]
+
 			cov = cov[1:-1]
 			cov = cov.split(",")
 			cov.sort()
 			cov = ",".join(cov)
-			cov_accessions[acc] = cov
 
 			if cov_prevalence.get(cov):
 				if cov_prevalence[cov].get(region):
@@ -95,47 +102,25 @@ class GisaidMetadata(object):
 				cov_prevalence[cov][region] = {}
 				cov_prevalence[cov][region][date] = 1
 
-		compress_json.dump(cov_accessions, "data/gisaid_cov_accessions.json.gz")
-		compress_json.dump(cov_prevalence, "data/gisaid_cov_prevalence.json.gz")
-		compress_json.dump(cov_region_date_counts, "data/gisaid_cov_region_date_counts.json.gz")
-
 		print("Done aquiring region-date counts")
 		print('\n')
 
-		return (vd.variant_dict_to_df(cov_prevalence, 'gisaid_cov'), 
-        	vd.region_date_dict_to_df(cov_region_date_counts, 'gisaid_cov'))
+		return (vd.variant_dict_to_df(cov_prevalence, data_type), 
+        	vd.region_date_dict_to_df(cov_region_date_counts, 'gisaid'))
 	
 
-    # The functions collects the AA mutation counts by region-date from the GISAID metadata file. If passed in
-	# and exisiting list of accessions, it will only compute on the new accessions and update the exisiting AA mutations
-	# prevalence JSON file as well as the region-date counts dictionary file
-	"""Parameters:
-		aa_accessions: A dictionary mapping GISAID acession to full covariate (like in the function above but this is only supposed
-			to be for accessions that we've computed AA mutation counts)
-		aa_prevalence: A dictionariy mapping AA mutation to region to date to counts
-		aa_region_date_counts: A dictionary mapping region to date to total isolate counts
-	"""
-	def mutation_counts(self, aa_accessions = {}, aa_prevalence = {}, aa_region_date_counts = {}):
+    # The functions collects the AA mutation counts by region-date from the GISAID metadata file.
+	def mutation_counts(self):
 
 		print("Aggregating mutation region-date counts ...")
 
 		data = self.gisaid
-
-		if (aa_accessions != {} or aa_prevalence != {} or aa_region_date_counts != {}):
-			if (aa_accessions == {} or aa_prevalence == {} or aa_region_date_counts == {}):
-				sys.exit("Input Error: accessions, prevalence counts, and region-date counts must all be inputted or none inputed for GISAID analysis.")
-		
-		if aa_accessions != {}:
-			aa_accessions = compress_json.load(aa_accessions)
-			aa_prevalence = compress_json.load(aa_prevalence)
-			aa_region_date_counts = compress_json.load(aa_region_date_counts)
-			data = data[(not data['Acession ID'].isin(aa_accessions.keys()))]
-
+		aa_prevalence = {}
+		aa_region_date_counts = {}
 
 		for ind in data.index:
 			name = data['Virus name'][ind].split("/")
 			region = name[1]
-			acc = data['Accession ID'][ind]
 			date = data['Collection date'][ind]
 			date = date.strftime('%Y-%m-%d')
 
@@ -148,35 +133,41 @@ class GisaidMetadata(object):
 				aa_region_date_counts[region] = {}
 				aa_region_date_counts[region][date] = 1
 
-			cov = data['AA Substitutions'][ind]
+			if self.who:
+				data_type = 'gisaid_'+self.who+'_aa'
+				clade = data['Variant'][ind]
+				if self.who in clade:
+					cov = data['AA Substitutions'][ind]
+				else:
+					continue
+			elif self.pango:
+				data_type = 'gisaid_'+self.pango+'_aa'
+				pango_lineage = data['Pango lineage'][ind]
+				if self.pango in pango_lineage:
+					cov = data['AA Substitutions'][ind]
+				else:
+					continue
+			else:
+				data_type = 'gisaid_aa'
+				cov = data['AA Substitutions'][ind]
+
 			cov = cov[1:-1]
-			aa_accessions[acc] = cov
 			muts = cov.split(",")
 			aa_prevalence = vd.aa_prevalence_main(aa_prevalence, muts, region, date)
-
-		compress_json.dump(aa_accessions, "data/gisaid_aa_accessions.json.gz")
-		compress_json.dump(aa_prevalence, "data/gisaid_aa_prevalence.json.gz")
-		compress_json.dump(aa_region_date_counts, "data/gisaid_aa_region_date_counts.json.gz")
 
 		print("Done aquiring region-date counts")
 		print('\n')
 
-		return (vd.variant_dict_to_df(aa_prevalence, 'gisaid_aa'), 
-			vd.region_date_dict_to_df(aa_region_date_counts, 'gisaid_aa'))
+		return (vd.variant_dict_to_df(aa_prevalence, data_type), 
+			vd.region_date_dict_to_df(aa_region_date_counts, 'gisaid'))
 
 
 
-	# The functions collects the covariate counts by region-date from the GISAID metadata file for a specific protein. If passed in
-	# and exisiting list of accessions, it will only compute on the new accessions and update the exisiting protein covariate
-	# prevalence JSON file as well as the region-date counts dictionary file
+	# The functions collects the covariate counts by region-date from the GISAID metadata file for a specific protein.
 	"""Parameters:
 		protein: Inputted protein to compute the covariates for
-		prot_accessions: A dictionary mapping GISAID acession to full covariate (like in the function above but this is only supposed
-			to be for accessions that we've computed Spike covariate counts)
-		prot_prevalence: A dictionariy mapping some protein covariate to region to date to counts
-		prot_region_date_counts: A dictionary mapping region to date to total isolate counts
 	"""
-	def protein_counts(self, protein, prot_accessions = {}, prot_prevalence = {}, prot_region_date_counts = {}):
+	def protein_counts(self, protein):
 
 		print("Aggregating protein-specific covariate region-date counts ...")
 
@@ -184,21 +175,12 @@ class GisaidMetadata(object):
 			return list(map(int, re.findall(r'\d+', text)))[0]
 
 		data = self.gisaid
-
-		if (prot_accessions != {} or prot_prevalence != {} or prot_region_date_counts != {}):
-			if (prot_accessions == {} or prot_prevalence == {} or prot_region_date_counts == {}):
-				sys.exit("Input Error: accessions, prevalence counts, and region-date counts must all be inputted or none inputed for GISAID analysis.")
-		
-		if prot_accessions != {}:
-			prot_accessions = compress_json.load(prot_accessions)
-			prot_prevalence = compress_json.load(prot_prevalence)
-			prot_region_date_counts = compress_json.load(prot_region_date_counts)
-			data = data[(not data['Acession ID'].isin(prot_accessions.keys()))]
+		prot_prevalence = {}
+		prot_region_date_counts = {}
 
 		for ind in data.index:
 			name = data['Virus name'][ind].split("/")
 			region = name[1]
-			acc = data['Accession ID'][ind]
 			date = data['Collection date'][ind]
 			date = date.strftime('%Y-%m-%d')
 
@@ -211,14 +193,31 @@ class GisaidMetadata(object):
 				prot_region_date_counts[region] = {}
 				prot_region_date_counts[region][date] = 1
 
-			cov = data['AA Substitutions'][ind]
+			if self.who:
+				data_type = 'gisaid_'+self.who+'_'+protein+'_cov'
+				clade = data['Variant'][ind]
+				if self.who in clade:
+					cov = data['AA Substitutions'][ind]
+				else:
+					continue
+			elif self.pango:
+				data_type = 'gisaid_'+self.pango+'_'+protein+'_cov'
+				pango_lineage = data['Pango lineage'][ind]
+				if self.pango in pango_lineage:
+					cov = data['AA Substitutions'][ind]
+				else:
+					continue
+			else:
+				data_type = 'gisaid_'+protein+'_cov'
+				cov = data['AA Substitutions'][ind]
+
 			cov = cov[1:-1]
-			prot_accessions[acc] = cov
 			muts = cov.split(",")
 			
 			prot_cov = []
 			for mut in muts:
-				if protein in mut:
+				m = mut.split("_")[0]
+				if protein == m:
 					prot_cov.append(mut)
 			prot_cov.sort(key=num_sort)
 			prot_cov = ",".join(prot_cov)
@@ -237,17 +236,57 @@ class GisaidMetadata(object):
 				prot_prevalence[prot_cov][region] = {}
 				prot_prevalence[prot_cov][region][date] = 1
 
-		compress_json.dump(prot_accessions, "data/gisaid_"+protein+"_accessions.json.gz")
-		compress_json.dump(prot_prevalence, "data/gisaid_"+protein+"_prevalence.json.gz")
-		compress_json.dump(prot_region_date_counts, "data/gisaid_"+protein+"_region_date_counts.json.gz")
-
 		print("Done acquiring protein-specific region-date counts")
 		print('\n')
 
-		return (vd.variant_dict_to_df(prot_prevalence, 'gisaid_'+protein), 
-			vd.region_date_dict_to_df(prot_region_date_counts, 'gisaid_'+protein))
+		return (vd.variant_dict_to_df(prot_prevalence, data_type),
+			vd.region_date_dict_to_df(prot_region_date_counts, 'gisaid'))
 
 
+	# This function collects PANGO Lineage counts by region and date from the GISAID Metadata file.
+	def lineage_counts(self):
+
+		print("Aggregating PANGO Lineage region-date counts ...")
+		
+		data = self.gisaid
+		lineage_prevalence = {}
+		lineage_region_date_counts = {}
+
+		for ind in data.index:
+			lineage = data['Pango lineage'][ind]
+			name = data['Virus name'][ind].split("/")
+			region = name[1]
+			date = data['Collection date'][ind]
+			date = date.strftime('%Y-%m-%d')
+
+			if lineage_region_date_counts.get(region):
+				if lineage_region_date_counts[region].get(date):
+					lineage_region_date_counts[region][date] += 1
+				else:
+					lineage_region_date_counts[region][date] = 1
+			else:
+				lineage_region_date_counts[region] = {}
+				lineage_region_date_counts[region][date] = 1
+
+			if lineage_prevalence.get(lineage):
+				if lineage_prevalence[lineage].get(region):
+					if lineage_prevalence[lineage][region].get(date):
+						lineage_prevalence[lineage][region][date] += 1
+					else:
+						lineage_prevalence[lineage][region][date] = 1
+				else:
+					lineage_prevalence[lineage][region] = {}
+					lineage_prevalence[lineage][region][date] = 1
+			else:
+				lineage_prevalence[lineage] = {}
+				lineage_prevalence[lineage][region] = {}
+				lineage_prevalence[lineage][region][date] = 1
+
+		print("Done acquiring PANGO Lineage region-date counts")
+		print('\n')
+
+		return (vd.variant_dict_to_df(lineage_prevalence, 'lineage'), 
+			vd.region_date_dict_to_df(lineage_region_date_counts, 'gisaid'))
 
 
 
