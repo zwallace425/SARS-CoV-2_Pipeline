@@ -140,7 +140,7 @@ class CleanMolSeq(object):
             total += 1
             if len(name_lwr.split("|")) >= 6:
                 if 'severe acute respiratory syndrome coronavirus 2' in name_lwr or 'sars-cov-2' in name_lwr or 'sars-cov2' in name_lwr or 'sars_cov_2' in name_lwr or 'sars_cov2' in name_lwr:
-                    if date != '':
+                    if len(date) == 10:
                         if country != '':
                             if length >= min_length:
                                 if r >= min_ratio:

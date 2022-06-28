@@ -3,7 +3,7 @@
 # from analyze_dynamics in the VariantAnalysis object, which is ...
 
 """	Variant 		Region		Date 		Variant Count 		Isolates Count 		Prevalence 		Growth 		Jerk
-	X				X			XXXX-XX-XX	X 					X 					X 				X 			X
+	X				X			YYYY-MM-DD	X 					X 					X 				X 			X
 """
 
 import sys

@@ -223,13 +223,27 @@ class VariantDynamics(object):
 			ref = mol_seq.get_seq()
 
 		for mol_seq in cms.stream_fasta(seqs_fasta, True):
-			acc = str(mol_seq.get_seq_id().split('|')[1])
-			date = str(mol_seq.get_seq_id().split('gb_collection_date:')[1])
+			acc = mol_seq.get_seq_id().split('|')[1]
+			date = mol_seq.get_seq_id().split('gb_collection_date:')[1]
 			date = date.replace('_', '-')
-			region = str(mol_seq.get_seq_id().split('Country:')[1].split('|')[0])
-			seq = str(mol_seq.get_seq())
+			region = mol_seq.get_seq_id().split('Country:')[1].split('|')[0]
+			seq = mol_seq.get_seq()
+			fasta = mol_seq.to_fasta()
+			with open('single_bvbrc_seq.fasta', 'w') as f:
+				f.write(fasta)
+			f.close()
 			if region == 'USA':
-				state = str(mol_seq.get_seq_id().split('Strain:')[1].split('|')[0].split('/')[3].replace('_','-').split('-')[0])
+				state = str(mol_seq.get_seq_id().split('Strain:')[1].split('|')[0].split('/'))
+				if (len(state) < 4):
+					if new_storage:
+						qc_storage_file[acc] = {}
+						qc_storage_file[acc]['sequence'] = seq
+						qc_storage_file[acc]['QC'] = 'Fail: US Region'
+					else:
+						qc_storage_file[acc]['QC'] = 'Fail: US Region'
+					continue
+				else:
+					state = state[3].replace('_','-').split('-')[0]
 				if (state.isalpha() and len(state) == 2):
 					region = str('USA_'+state)
 					if new_storage:
