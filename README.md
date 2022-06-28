@@ -1,4 +1,4 @@
-Early Detection of SARS-CoV-2 Variants of Interest
+# Early Detection of SARS-CoV-2 Variants of Interest
 
 This repository contains the code we make public for scoring emerging SARS-CoV-2 variants based on the algorithms described in 
 Wallace ZS et al., "Early Detection of Emerging SARS-CoV-2 Variants of Interest for Experimental Evaluation", Frontiers in
@@ -10,7 +10,7 @@ DEPENDENCIES:
 
 Please use pip install to install these dependencies prior to running the software.
 
-INTRODUCTION: 
+## INTRODUCTION: 
 
 Users can score and rank SARS-CoV-2 variants as the emerge for priotizing experimental evaluation based on newly updated data 
 in the GISAID metadatafile or GenBank/BV-BRC FASTA files.  Rankings are based on a heuristic that combines epidemiological dynamics 
@@ -28,7 +28,7 @@ https://www.viprbrc.org/brcDocs/datafiles/public_share/Corona/. As of now, the p
 those in this repository due to data parsing requirements. WARNING: The FASTA files are large and compute time is long due to
 alignments and processing.  It is highly advised to have access to HPC resources for running on FASTA data.
 
-RUNNING PIPELINE:
+## RUNNING PIPELINE:
 
 Run the following commands to get the pipeline working in your local dir.  Note, every analysis begins with "python main.py"
 
@@ -38,25 +38,41 @@ git clone https://github.com/zwallace425/SARS-CoV-2_Pipeline.git
 
 cd scripts
 
-To score and rank full proteome variant constellations:
+To score and rank full proteome variant constellations with the Composite Score (minimum commandline requirments):
 
 	(1) GISAID: python main.py --gisaid [GISAID Metadata File] --analyze covariates
 	(2) GenBank/BV-BRC: python main.py --ref NC_045512.2.fasta --query [FASTA File] --analyze covariates
 
-To score and rank protein-specific variant constellations:
+To score and rank protein-specific variant constellations with the Composite Score:
 
-	(3) [GISAID or GenBank/BV-BRC Args] --protein Spike
+	(3) [GISAID or GenBank/BV-BRC Args] --protein [SARS-CoV-2 Protein]
 
-To score and rank single amino acid mutations:
+To score and rank single amino acid mutations with the Mutation Prevalence Score:
 
 	(4) GISAID: python main.py --gisaid [GISAID Metadata File] --analyze mutations
 	(5) GenBank/BV-BRC: python main.py --ref NC_045512.2.fasta --query [FASTA File] --analyze mutations
 
-To score and rank protein-specific amino acid mutations:
+To score and rank protein-specific amino acid mutations with the Mutation Prevalence Score:
 
-	(6) [GISAID or GenBank/BV-BRC args] --protein Spike
+	(6) [GISAID or GenBank/BV-BRC args] --protein [SARS-CoV-2 Protein]
 
-The following are optional arguments after one of the required six usage options:
+To score and rank variant constellations or single amino acid mutations within a specific PANGO Lineage or WHO Name:
+
+	(7) python main.py --gisaid [GISAID Metadata File] --analyze covariates --WHO [WHO Name]
+	(8) python main.py --gisaid [GISAID Metadata File] --analyze covariates --PANGO [PANGO Lineage]
+	(9) python main.py --gisaid [GISAID Metadata File] --analyze mutations --WHO [WHO Name]
+	(10) python main.py --gisaid [GISAID Metadata File] --analyze mutations --PANGO [PANGO Lineage]
+	(11) [ANY OF THE ABOVE] --protein [SARS-CoV-2 Protein]
+
+	NOTE: Scoring of covariates/mutations specific to a PANGO Lineage/WHO Name not permitted with FASTA data
+
+To score and rank PANGO Lineages with the Emerging Lineage Score:
+	
+	(12) python main.py --gisaid [GISAID Metadata File] --analyze lineages
+
+	NOTE: Scoring PANGO Lineages not permitted with FASTA data. Additionally, any '--protein' input will be ignored
+
+The following are optional arguments that can be inputted with any of the analysis options:
 	
 	[REQUIRED ARGS] --period [D/W/2W/M] --interval [>=2 and <=6] --n_content [>0 and <1] --seq_length [NT Sequence Length] --min_date [>2019-11-01]
 
@@ -76,7 +92,7 @@ regions where ambiguous nucleotides were identified.  There is also a file title
 JSON file mapping each GenBank accession to the nucleotide sequence to quality control results, such as the N-content, frameshift status, or if 
 the record failed any metadata criteria like no region or date.
 
-NOTES:
+## NOTES:
 
 When running the pipeline to score covariates with the GISAID metadata file, compute time is no more than 15 minutes.
 When running the pipeline on FASTA files that includes a batch download for a single month, compute time will be a few hours.
@@ -118,11 +134,12 @@ genomes_test_run.fasta --- 20 genomes sampled from ViPR used for testing the pip
 
 SARS2_April_500.fasta -- 500 genomes sampled from ViPR in the month of April 2022 used for testing
 
-FINAL REMARKS:
+## FINAL REMARKS:
 
 We are continually updating this repository to enhance code efficiency, algorithms, analysis options, and user experience.  Currently the plotting analysis
 described in the manuscript is not available as that was originally designed for BV-BRC Emerging Variant Report spreadsheets generated from GISAID
 data and used for consulting with the NIAID SAVE Consortium, but we cannot publically share those spreadsheets and code due to GISAID licensing agreements.
+A public implementation of this will soon be made available.
 
 For any questions or bug catches please contact Zach Wallace at zwallace@jcvi.org or ask questions on GitHub for public discussion.
 
