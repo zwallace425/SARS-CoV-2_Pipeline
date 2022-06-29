@@ -178,9 +178,10 @@ if __name__ == "__main__":
 				else:
 					scores = vs(prot_prevalence_df, interval).composite_score(non_spike_sfoc = non_spike_sfoc)
 			else:
-				cov_counts_df, cov_region_dates_df = gm_object.covariate_counts()
+				cov_counts_df, cov_region_dates_df, cov_pango_df = gm_object.covariate_counts()
 				cov_prevalence_df = va.analyze_dynamics(cov_counts_df, cov_region_dates_df, period)
 				scores = vs(cov_prevalence_df, interval).composite_score(spike_sfoc = spike_sfoc, non_spike_sfoc = non_spike_sfoc)
+				scores = cov_pango_df.merge(scores, on = 'Variant').sort_values(by = 'Composite Score', ascending = False).reset_index(drop=True)
 			scores.to_csv("results/gisaid_composite_scores_"+period+"_"+today+".txt", sep = '\t', index = False)
 			print(scores)
 		elif (args.analyze == "mutations"):

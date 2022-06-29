@@ -49,12 +49,14 @@ class GisaidMetadata(object):
 		data = self.gisaid
 		cov_prevalence = {}
 		cov_region_date_counts = {}
+		cov_pango = {}
 
 		for ind in data.index:
 			name = data['Virus name'][ind].split("/")
 			region = name[1]
 			date = data['Collection date'][ind]
 			date = date.strftime('%Y-%m-%d')
+			pango_lineage = data['Pango lineage'][ind]
 
 			if cov_region_date_counts.get(region):
 				if cov_region_date_counts[region].get(date):
@@ -74,7 +76,6 @@ class GisaidMetadata(object):
 					continue
 			elif self.pango:
 				data_type = 'gisaid_'+self.pango+'_cov'
-				pango_lineage = data['Pango lineage'][ind]
 				if self.pango in pango_lineage:
 					cov = data['AA Substitutions'][ind]
 				else:
@@ -87,6 +88,7 @@ class GisaidMetadata(object):
 			cov = cov.split(",")
 			cov.sort()
 			cov = ",".join(cov)
+			cov_pango[cov] = pango_lineage
 
 			if cov_prevalence.get(cov):
 				if cov_prevalence[cov].get(region):
@@ -106,7 +108,8 @@ class GisaidMetadata(object):
 		print('\n')
 
 		return (vd.variant_dict_to_df(cov_prevalence, data_type), 
-        	vd.region_date_dict_to_df(cov_region_date_counts, 'gisaid'))
+        	vd.region_date_dict_to_df(cov_region_date_counts, 'gisaid'),
+        	GisaidMetadata.cov_pango_to_df(cov_pango))
 	
 
     # The functions collects the AA mutation counts by region-date from the GISAID metadata file.
@@ -287,6 +290,21 @@ class GisaidMetadata(object):
 
 		return (vd.variant_dict_to_df(lineage_prevalence, 'lineage'), 
 			vd.region_date_dict_to_df(lineage_region_date_counts, 'gisaid'))
+
+
+	# This function is just a helper for coverting the mapping of full variant constellations to pango lineage into a dataframe
+	@staticmethod
+	def cov_pango_to_df(cov_pango_dict):
+
+		cov_pango_df = []
+		for cov in cov_pango_dict.keys():
+			pango = cov_pango_dict[cov]
+			data = pd.DataFrame({'PANGO Lineage': [pango], 'Variant': [cov]})
+			cov_pango_df.append(data)
+
+		cov_pango_df = pd.concat(cov_pango_df, ignore_index = True)
+
+		return cov_pango_df
 
 
 
