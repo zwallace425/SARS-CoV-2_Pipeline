@@ -200,8 +200,8 @@ if __name__ == "__main__":
 			else:
 				spike_scores = vs(aa_prevalence_df, interval).mutation_prevalence_score(Spike = True)
 				non_spike_scores = vs(aa_prevalence_df, interval).mutation_prevalence_score(nonSpike = True)
-				spike_scores.to_csv("results/gisaid_spike_mutation_scores"+period+"_"+today+".txt", sep = '\t', index = False)
-				non_spike_scores.to_csv("results/gisaid_non_spike_mutation_scores"+period+"_"+today+".txt", sep = '\t', index = False)
+				spike_scores.to_csv("results/gisaid_spike_mutation_scores_"+period+"_"+today+".txt", sep = '\t', index = False)
+				non_spike_scores.to_csv("results/gisaid_non_spike_mutation_scores_"+period+"_"+today+".txt", sep = '\t', index = False)
 				print("Spike mutations ...")
 				print(spike_scores)
 				print('\n')
@@ -209,9 +209,7 @@ if __name__ == "__main__":
 				print(non_spike_scores)
 		elif (args.analyze == "lineages"):
 			lineage_counts_df, lineage_region_dates_df = gm_object.lineage_counts()
-			print(lineage_counts_df)
 			lineage_prevalence_df = va.analyze_dynamics(lineage_counts_df, lineage_region_dates_df, period)
-			print(lineage_prevalence_df)
 			scores = vs(lineage_prevalence_df, interval).emerging_lineage_score()
 			scores.to_csv("results/gisaid_lineage_scores"+period+"_"+today+".txt", sep = '\t', index = False)
 			print(scores)
