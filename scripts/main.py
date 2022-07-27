@@ -6,6 +6,7 @@ import time
 import argparse
 import warnings
 import pandas as pd
+import pickle
 from datetime import date
 from clean_mol_seq import CleanMolSeq as cms
 from gisaid_metadata import GisaidMetadata as gm
@@ -208,9 +209,10 @@ if __name__ == "__main__":
 				print("Non-Spike mutations ...")
 				print(non_spike_scores)
 		elif (args.analyze == "lineages"):
-			lineage_counts_df, lineage_region_dates_df = gm_object.lineage_counts()
-			lineage_prevalence_df = va.analyze_dynamics(lineage_counts_df, lineage_region_dates_df, period)
-			scores = vs(lineage_prevalence_df, interval).emerging_lineage_score()
+			cov_counts_df, cov_region_dates_df, cov_pango_df = gm_object.covariate_counts()
+			cov_prevalence_df = va.analyze_dynamics(cov_counts_df, cov_region_dates_df, period)
+			cov_prevalence_df = cov_pango_df.merge(cov_prevalence_df, on = 'Variant')
+			scores = vs(cov_prevalence_df, interval).emerging_lineage_score()
 			scores.to_csv("results/gisaid_lineage_scores"+period+"_"+today+".txt", sep = '\t', index = False)
 			print(scores)
 

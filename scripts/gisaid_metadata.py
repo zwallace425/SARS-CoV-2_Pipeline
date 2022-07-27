@@ -16,7 +16,7 @@ from variant_dynamics import VariantDynamics as vd
 class GisaidMetadata(object):
 
 	# Intialize GISAID metadata dataframe and perform QC on the data
-	def __init__(self, gisaid_df, seq_length = 29400, n_content = 0.01, min_date = '2022-01-01', WHO = None, PANGO = None):
+	def __init__(self, gisaid_df, seq_length = 29400, n_content = 0.05, min_date = '2022-01-01', WHO = None, PANGO = None):
 		
 		print("Preparing GISAID Metadata ...")
 		
@@ -247,6 +247,8 @@ class GisaidMetadata(object):
 
 
 	# This function collects PANGO Lineage counts by region and date from the GISAID Metadata file.
+	# NOTE: The data returned from this function is not returned in any of our algorithms but is still
+	# helpful data to collect anyhow
 	def lineage_counts(self):
 
 		print("Aggregating PANGO Lineage region-date counts ...")

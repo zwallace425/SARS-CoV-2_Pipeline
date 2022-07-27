@@ -13,10 +13,10 @@ from datetime import datetime
 
 class VariantScoring(object):
 
-	# Intialize the variant dynamics dataframe to only contain the last four timestamps of data
+	# Intialize the variant dynamics dataframe to only contain the last three timestamps of data
 	def __init__(self, variants_df, interval = 3):
 		
-		dates = variants_df.sort_values(by = 'Date').drop_duplicates(subset = ['Date']).head(interval)
+		dates = variants_df.sort_values(by = 'Date', ascending = False).drop_duplicates(subset = ['Date']).head(interval)
 		dates = list(dates['Date'])
 		dynamics_df = variants_df[(variants_df['Date'].isin(dates))]
 		
@@ -61,10 +61,12 @@ class VariantScoring(object):
 		if (covariates):
 			data = data[(data['Variant'].isin(covariates))]
 
-		significant_variants = data[(data['Variant Count'] > 10)]
-		significant_variants = significant_variants[(significant_variants['Prevalence'] > 0.05) | (significant_variants['Growth'] > 5)]
+		significant_variants = data[(data['Variant Count'] > 10) & (data['Date'] == max(data['Date']))]
+		significant_variants = significant_variants[['Variant', 'Region']]
+		significant_variants_df = significant_variants.merge(data, on = ['Variant', 'Region']).drop_duplicates()
+		significant_variants_df = significant_variants_df[(significant_variants_df['Prevalence'] > 0.05) | (significant_variants_df['Growth'] > 5)]
 
-		scores = significant_variants.groupby('Variant').size().reset_index(
+		scores = significant_variants_df.groupby('Variant').size().reset_index(
 			name = 'Sequence Prevalence Score').sort_values(by = 'Sequence Prevalence Score', ascending = False).dropna()
 
 
@@ -84,18 +86,20 @@ class VariantScoring(object):
 		if (Spike and nonSpike):
 			sys.exit("Invalid Input: Only Spike or nonSpike may be set to boolean True, got True and True")
 
-		variants_df = self.variants
+		data = self.variants
 
 		if Spike:
-			variants_df = variants_df[(variants_df['Variant'].str.contains('Spike'))]
+			data = data[(data['Variant'].str.contains('Spike'))]
 		
 		if nonSpike:
-			variants_df = variants_df[(variants_df['Variant'].str.contains('Spike') == False)]
+			data = data[(data['Variant'].str.contains('Spike') == False)]
 
-		significant_variants = variants_df[(variants_df['Variant Count'] > 10)]
-		significant_variants = significant_variants[(significant_variants['Prevalence'] > 0.05) | (significant_variants['Growth'] > 5)]
+		significant_variants = data[(data['Variant Count'] > 10) & (data['Date'] == max(data['Date']))]
+		significant_variants = significant_variants[['Variant', 'Region']]
+		significant_variants_df = significant_variants.merge(data, on = ['Variant', 'Region']).drop_duplicates()
+		significant_variants_df = significant_variants_df[(significant_variants_df['Prevalence'] > 0.05) | (significant_variants_df['Growth'] > 5)]
 
-		scores = significant_variants.groupby('Variant').size().reset_index(
+		scores = significant_variants_df.groupby('Variant').size().reset_index(
 			name = 'Mutation Prevalence Score').sort_values(by = 'Mutation Prevalence Score', ascending = False).dropna()
 
 		print("Done computing Mutation Prevalence Score.")
@@ -105,18 +109,23 @@ class VariantScoring(object):
 
 
 	# This function compute the emerging lineage score for PANGO Lineages and returns the lineages ranked by the score.
-	# This function does not recieve any parameters. 
+	# This function does not recieve any parameters. NOTE: There must be a PANGO Lineage column with the intialized 
+	# dataframe mapping each covariate to the PANGO Lineage or else the function will abort.
 	def emerging_lineage_score(self):
 
 		print("Computing Emerging Lineage Score ...")
 
-		variants_df = self.variants
+		data = self.variants
 
-		variants_df = variants_df.rename(columns = {'Variant': 'PANGO Lineage'})
-		significant_variants = variants_df[(variants_df['Variant Count'] > 10)]
-		significant_variants = significant_variants[(significant_variants['Growth'] > 15)]
+		if 'PANGO Lineage' not in data.columns:
+			sys.exit("Data Error: PANGO Lineage names not in the data --- cannot compute Emerging Lineage Score")
 
-		scores = significant_variants.groupby('PANGO Lineage').size().reset_index(
+		significant_variants = data[(data['Variant Count'] > 10) & (data['Date'] == max(data['Date']))]
+		significant_variants = significant_variants[['Variant', 'Region']]
+		significant_variants_df = significant_variants.merge(data, on = ['Variant', 'Region']).drop_duplicates()
+		significant_variants_df = significant_variants_df[(significant_variants_df['Growth'] > 15)]
+
+		scores = significant_variants_df.groupby('PANGO Lineage').size().reset_index(
 			name = 'Emerging Lineage Score').sort_values(by = 'Emerging Lineage Score', ascending = False).dropna()
 
 		print("Done computing Emerging Lineage Score.")

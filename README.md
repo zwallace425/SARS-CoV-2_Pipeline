@@ -20,7 +20,7 @@ can score and rank full proteome variant constellations, Spike protein variant c
 such as ranking variant constellations found on NSP3 or NSP5.  In addition, this software allows users to rank individual
 amino acid mutations based on the same algorithm.
 
-To run this pipeline on GISAID data, you must have a GISAID account set up and request downloads of the metadata file.  Donwnload
+To run this pipeline on GISAID data (recommended), you must have a GISAID account set up and request downloads of the metadata file.  Donwnload
 this file and input to the commandline.  Please keep in mind the GISAID metadata file is about 7.5 GB and growing.
 
 To run this pipeline on GenBank/BV-BRC SARS-CoV-2 sequence data in FASTA format, first download batches from
