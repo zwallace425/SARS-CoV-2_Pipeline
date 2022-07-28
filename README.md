@@ -134,6 +134,16 @@ genomes_test_run.fasta --- 20 genomes sampled from ViPR used for testing the pip
 
 SARS2_April_500.fasta -- 500 genomes sampled from ViPR in the month of April 2022 used for testing
 
+## Supplementary Material
+
+In the "materials" directory we offer a detailed version of the algorithms utilized in this pipeline in the form of a pseudocode pdf file.  This pseudocode 
+pretty much covers the entire pipeline all the way from data processing, alignments, capturing dynamics, to scoring heuristics and is labeled as
+"Early_Detection_Pseudocode.pdf".
+
+In addition to pseudocode, the materials directory offers the Spike Sequence Features of Concern and Non-Spike Sequence Features of Concern data as an
+additional location other than the "scripts/data" directory, the latter being meant for the pipeline.  These data are labeled as Spike_SFoCs.txt and 
+non-Spike_SFoCs.txt
+
 ## FINAL REMARKS:
 
 We are continually updating this repository to enhance code efficiency, algorithms, analysis options, and user experience.  Currently the plotting analysis
