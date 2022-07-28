@@ -134,7 +134,7 @@ genomes_test_run.fasta --- 20 genomes sampled from ViPR used for testing the pip
 
 SARS2_April_500.fasta -- 500 genomes sampled from ViPR in the month of April 2022 used for testing
 
-## Supplementary Material
+## Supplementary Material:
 
 In the "materials" directory we offer a detailed version of the algorithms utilized in this pipeline in the form of a pseudocode pdf file.  This pseudocode 
 pretty much covers the entire pipeline all the way from data processing, alignments, capturing dynamics, to scoring heuristics and is labeled as
