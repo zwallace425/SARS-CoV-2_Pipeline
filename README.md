@@ -10,7 +10,7 @@ DEPENDENCIES:
 
 Please use pip install to install these dependencies prior to running the software.
 
-## INTRODUCTION: 
+## Introduction: 
 
 Users can score and rank SARS-CoV-2 variants as the emerge for priotizing experimental evaluation based on newly updated data 
 in the GISAID metadatafile or GenBank/BV-BRC FASTA files.  Rankings are based on a heuristic that combines epidemiological dynamics 
@@ -28,7 +28,7 @@ https://www.viprbrc.org/brcDocs/datafiles/public_share/Corona/. As of now, the p
 those in this repository due to data parsing requirements. WARNING: The FASTA files are large and compute time is long due to
 alignments and processing.  It is highly advised to have access to HPC resources for running on FASTA data.
 
-## RUNNING PIPELINE:
+## Running the Pipeline:
 
 Run the following commands to get the pipeline working in your local dir.  Note, every analysis begins with "python main.py"
 
@@ -92,7 +92,7 @@ regions where ambiguous nucleotides were identified.  There is also a file title
 JSON file mapping each GenBank accession to the nucleotide sequence to quality control results, such as the N-content, frameshift status, or if 
 the record failed any metadata criteria like no region or date.
 
-## NOTES:
+## Files:
 
 When running the pipeline to score covariates with the GISAID metadata file, compute time is no more than 15 minutes.
 When running the pipeline on FASTA files that includes a batch download for a single month, compute time will be a few hours.
@@ -144,7 +144,7 @@ In addition to pseudocode, the materials directory offers the Spike Sequence Fea
 additional location other than the "scripts/data" directory, the latter being meant for the pipeline.  These data are labeled as Spike_SFoCs.txt and 
 non-Spike_SFoCs.txt
 
-## FINAL REMARKS:
+## Final Remarks:
 
 We are continually updating this repository to enhance code efficiency, algorithms, analysis options, and user experience.  Currently the plotting analysis
 described in the manuscript is not available as that was originally designed for BV-BRC Emerging Variant Report spreadsheets generated from GISAID
