@@ -1,0 +1,91 @@
+Protein	Start	End	mAb escape	serum Ab escape	Increased ACE2 binding	Region of interest
+Spike	14	20				NTD supersite N-terminus
+Spike	140	158				NTD supersite Beta-hairpin
+Spike	245	264				NTD supersite loop
+Spike	336	336		"convalescent serum:subject G (day 18), convalescent serum:subject J (day 15)"		
+Spike	345	345	class 3:C135			
+Spike	346	346	"class 2:S2X58, class 3:C110, class 3:C135, class 3:COV2-2130"			
+Spike	361	361	class 2:S2H13	convalescent serum:subject J (day 15)		
+Spike	367	367			Yes	
+Spike	369	369	"class 4:COV2-2677, class 4:S2X259, class 4:S2X35"	"Moderna vaccine serum:M03 (day 119), Moderna vaccine serum:M08 (day 119), convalescent serum:subject J (day 15)"		
+Spike	370	370	class 4:COV2-2677			
+Spike	371	371	"class 3:REGN10987, class 4:COV2-2677"			
+Spike	372	372	class 4:COV2-2677			
+Spike	374	374	"class 4:COV2-2677, class 4:S2X259, class 4:S2X35"	convalescent serum:subject J (day 15)		
+Spike	376	376	"class 4:COV2-2082, class 4:S2X35"			
+Spike	377	377	class 4:S2X35			
+Spike	378	378	"class 4:COV2-2082, class 4:COV2-2094, class 4:COV2-2677, class 4:S2X259, class 4:S2X35"			
+Spike	383	383		"Moderna vaccine serum:M03 (day 119), Moderna vaccine serum:M08 (day 119), Moderna vaccine serum:M18 (day 119)"		
+Spike	384	384	"class 4:COV2-2677, class 4:S2X259, class 4:S2X35"	"Moderna vaccine serum:M03 (day 119), Moderna vaccine serum:M08 (day 119)"		
+Spike	385	385		Moderna vaccine serum:M03 (day 119)	Yes	
+Spike	386	386		Moderna vaccine serum:M03 (day 119)		
+Spike	390	390		convalescent serum:subject J (day 15)		
+Spike	394	394	class 4:S2H97			
+Spike	396	396	class 4:S2H97			
+Spike	403	403	class 1:S2H14			
+Spike	404	404	class 4:S2X35			
+Spike	405	405	"class 1:LY-CoV016, class 4:S2X35"			
+Spike	406	406	"class 1:REGN10933, class 1:S2H14, class 2:S2H13, class 2:S2X58, class 3:COV2-2130"	"convalescent serum:COV-021, convalescent serum:COV-057, convalescent serum:subject B (day 113), convalescent serum:subject F (day 115), convalescent serum:subject F (day 48)"		
+Spike	408	408	"class 4:COV2-2082, class 4:S2X259, class 4:S2X35"			
+Spike	414	414			Yes	
+Spike	415	415	class 1:LY-CoV016			
+Spike	417	417	"class 1:C105, class 1:LY-CoV016, class 1:REGN10933, class 1:S2H14, class 2:S2X16, class 4:COV2-2082"			
+Spike	420	420	"class 1:C105, class 1:LY-CoV016"			
+Spike	421	421	"class 1:C105, class 1:LY-CoV016"			
+Spike	428	428	class 4:S2H97			
+Spike	434	434	class 4:S2X35			
+Spike	439	439	class 3:REGN10987	"convalescent serum:subject F (day 115), convalescent serum:subject G (day 18)"		
+Spike	440	440	"class 3:C135, class 3:REGN10987, class 3:S2X227"			
+Spike	441	441	"class 3:C135, class 3:REGN10987"			
+Spike	443	443	"class 3:C135, class 3:COV2-2499, class 3:REGN10987, class 3:S2X227"	convalescent serum:subject G (day 18)		
+Spike	444	444	"class 3:C110, class 3:C135, class 3:COV2-2130, class 3:REGN10987, class 3:S2X227"	"convalescent serum:subject B (day 113), convalescent serum:subject F (day 115), convalescent serum:subject G (day 18)"		
+Spike	445	445	"class 3:C135, class 3:COV2-2130, class 3:COV2-2499, class 3:REGN10987, class 3:S2X227"	convalescent serum:subject G (day 18)		
+Spike	446	446	"class 2:S2H13, class 3:C110, class 3:COV2-2130, class 3:COV2-2499, class 3:REGN10987, class 3:S2X227"	convalescent serum:subject G (day 18)		
+Spike	447	447	"class 2:S2X58, class 3:C110, class 3:COV2-2130, class 3:COV2-2499, class 3:REGN10987"	"convalescent serum:subject F (day 115), convalescent serum:subject G (day 18), convalescent serum:subject I (day 102), convalescent serum:subject I (day 26)"		
+Spike	448	448	"class 2:COV2-2096, class 2:S2H13, class 2:S2X58, class 3:C110, class 3:C135, class 3:COV2-2130, class 3:REGN10987"	"convalescent serum:subject F (day 115), convalescent serum:subject G (day 18), convalescent serum:subject I (day 102), convalescent serum:subject I (day 26)"		
+Spike	449	449	"class 1:S2H14, class 2:C121, class 2:C144, class 2:S2H13, class 2:S2X58, class 3:C110, class 3:COV2-2130, class 3:REGN10987"	"convalescent serum:subject F (day 115), convalescent serum:subject G (day 18), convalescent serum:subject I (day 102)"		
+Spike	450	450	"class 2:COV2-2096, class 2:S2H13, class 2:S2X58, class 3:C110, class 3:C135, class 3:COV2-2130, class 3:REGN10987"	"convalescent serum:COV-057, convalescent serum:subject B (day 113), convalescent serum:subject B (day 26), convalescent serum:subject E (day 104), convalescent serum:subject E (day 28), convalescent serum:subject F (day 115), convalescent serum:subject F (day 48), convalescent serum:subject G (day 18), convalescent serum:subject I (day 102), convalescent serum:subject I (day 26), convalescent serum:subject J (day 121)"		
+Spike	452	452	"class 2:C002, class 2:COV2-2096, class 2:LY-CoV555, class 2:S2X58, class 3:C110"	"convalescent serum:subject F (day 115), convalescent serum:subject G (day 18)"		
+Spike	453	453	"class 1:C105, class 1:REGN10933, class 2:C121"		Yes	
+Spike	455	455	"class 1:C105, class 1:LY-CoV016, class 1:REGN10933, class 1:S2E12, class 1:S2H14, class 2:C002, class 2:C121, class 2:C144, class 2:S2X16"	"convalescent serum:COV-107, convalescent serum:subject A (day 120), convalescent serum:subject I (day 102), convalescent serum:subject I (day 26)"		
+Spike	456	456	"class 1:C105, class 1:LY-CoV016, class 1:REGN10933, class 1:S2E12, class 1:S2H14, class 2:C002, class 2:C121, class 2:C144, class 2:S2D106, class 2:S2H13, class 2:S2H58, class 2:S2X16, class 2:S2X58"	"Moderna vaccine serum:M06 (day 119), Moderna vaccine serum:M07 (day 119), Moderna vaccine serum:M10 (day 119), Moderna vaccine serum:M11 (day 119), convalescent serum:COV-021, convalescent serum:COV-047, convalescent serum:COV-057, convalescent serum:COV-072, convalescent serum:COV-107, convalescent serum:subject A (day 120), convalescent serum:subject A (day 45), convalescent serum:subject B (day 113), convalescent serum:subject B (day 26), convalescent serum:subject C (day 104), convalescent serum:subject D (day 33), convalescent serum:subject E (day 104), convalescent serum:subject E (day 28), convalescent serum:subject F (day 115), convalescent serum:subject F (day 48), convalescent serum:subject G (day 18), convalescent serum:subject I (day 102), convalescent serum:subject I (day 26), convalescent serum:subject J (day 15)"		
+Spike	459	459	class 1:LY-CoV016			
+Spike	460	460	"class 1:C105, class 1:LY-CoV016"			
+Spike	462	462	class 4:S2H97			
+Spike	470	470	class 2:S2X58			
+Spike	472	472	"class 1:COV2-2196, class 1:LY-CoV016, class 1:REGN10933, class 1:S2E12, class 1:S2H14, class 2:C002, class 2:C121, class 2:C144, class 2:LY-CoV555, class 2:S2H13, class 2:S2H58, class 2:S2X16, class 2:S2X58"	"convalescent serum:COV-021, convalescent serum:subject E (day 104), convalescent serum:subject I (day 102), convalescent serum:subject I (day 26)"		
+Spike	473	473	"class 1:C105, class 1:LY-CoV016, class 1:S2E12, class 1:S2H14, class 2:C002, class 2:C144, class 2:S2H13, class 2:S2X16"	"convalescent serum:subject E (day 104), convalescent serum:subject I (day 102), convalescent serum:subject I (day 26)"		
+Spike	475	475	"class 1:C105, class 1:COV2-2196, class 1:LY-CoV016, class 1:REGN10933, class 1:S2E12, class 1:S2H14, class 2:S2X16"			
+Spike	476	476	"class 1:COV2-2196, class 1:LY-CoV016, class 1:REGN10933, class 1:S2E12, class 2:S2H13"			
+Spike	477	477	class 1:S2E12			
+Spike	478	478	class 1:S2E12			
+Spike	481	481	class 2:S2H13			
+Spike	482	482	"class 2:C002, class 2:S2H13"			
+Spike	483	483	"class 2:C002, class 2:LY-CoV555, class 2:S2H13"	"convalescent serum:subject I (day 102), convalescent serum:subject I (day 26)"		
+Spike	484	484	"class 1:LY-CoV016, class 1:REGN10933, class 1:S2E12, class 1:S2H14, class 2:C002, class 2:C121, class 2:C144, class 2:COV2-2050, class 2:LY-CoV555, class 2:S2D106, class 2:S2H13, class 2:S2H58, class 2:S2X16, class 2:S2X58"	"convalescent serum:COV-047, convalescent serum:COV-057, convalescent serum:COV-072, convalescent serum:COV-107, convalescent serum:subject A (day 120), convalescent serum:subject B (day 113), convalescent serum:subject B (day 26), convalescent serum:subject C (day 32), convalescent serum:subject E (day 104), convalescent serum:subject E (day 28), convalescent serum:subject F (day 115), convalescent serum:subject F (day 48), convalescent serum:subject G (day 18), convalescent serum:subject I (day 102), convalescent serum:subject I (day 26)"	Yes	
+Spike	485	485	"class 1:COV2-2196, class 1:COV2-2832, class 1:LY-CoV016, class 1:REGN10933, class 1:S2E12, class 2:C002, class 2:C121, class 2:C144, class 2:COV2-2050, class 2:LY-CoV555, class 2:S2D106, class 2:S2H13, class 2:S2H58, class 2:S2X16, class 2:S2X58"	"convalescent serum:subject B (day 113), convalescent serum:subject E (day 104), convalescent serum:subject E (day 28), convalescent serum:subject F (day 115), convalescent serum:subject F (day 48), convalescent serum:subject I (day 102), convalescent serum:subject I (day 26)"		
+Spike	486	486	"class 1:COV2-2196, class 1:COV2-2832, class 1:LY-CoV016, class 1:REGN10933, class 1:S2E12, class 2:C002, class 2:C121, class 2:C144, class 2:LY-CoV555, class 2:S2D106, class 2:S2H13, class 2:S2H58, class 2:S2X16"	"convalescent serum:COV-107, convalescent serum:subject I (day 102), convalescent serum:subject I (day 26)"		
+Spike	487	487	"class 1:C105, class 1:COV2-2165, class 1:COV2-2196, class 1:COV2-2832, class 1:LY-CoV016, class 1:REGN10933, class 1:S2E12, class 2:C144, class 2:S2H13, class 2:S2H58, class 2:S2X16"			
+Spike	489	489	"class 1:COV2-2196, class 1:LY-CoV016, class 1:REGN10933, class 1:S2E12, class 1:S2H14, class 2:C002, class 2:C121, class 2:C144, class 2:S2H58, class 2:S2X16"	"convalescent serum:subject I (day 102), convalescent serum:subject I (day 26)"		
+Spike	490	490	"class 2:C002, class 2:C121, class 2:C144, class 2:COV2-2050, class 2:COV2-2096, class 2:LY-CoV555, class 2:S2D106, class 2:S2H13, class 2:S2H58, class 2:S2X58, class 3:C110"	"convalescent serum:subject E (day 104), convalescent serum:subject E (day 28), convalescent serum:subject I (day 102), convalescent serum:subject I (day 26)"		
+Spike	492	492	class 2:C002			
+Spike	493	493	"class 1:LY-CoV016, class 1:REGN10933, class 2:C002, class 2:C121, class 2:C144, class 2:LY-CoV555, class 2:S2H58, class 2:S2X16"	"convalescent serum:subject I (day 102), convalescent serum:subject I (day 26)"	Yes	
+Spike	494	494	"class 2:C002, class 2:C121, class 2:C144, class 2:LY-CoV555, class 2:S2H13, class 2:S2X58, class 3:C110, class 3:COV2-2130"	"convalescent serum:subject F (day 115), convalescent serum:subject I (day 102)"		
+Spike	496	496	"class 1:S2H14, class 3:COV2-2499"	"convalescent serum:subject I (day 102), convalescent serum:subject I (day 26)"		
+Spike	498	498	"class 1:S2H14, class 3:COV2-2499, class 3:REGN10987"	convalescent serum:subject G (day 18)	Yes	
+Spike	499	499	"class 1:S2H14, class 3:COV2-2499, class 3:REGN10987, class 3:S2X227"	"convalescent serum:COV-107, convalescent serum:subject G (day 18)"		
+Spike	500	500	"class 1:S2H14, class 3:COV2-2499, class 3:REGN10987"			
+Spike	501	501	"class 1:LY-CoV016, class 1:S2H14"		Yes	
+Spike	503	503	"class 1:S2H14, class 4:S2X35"	"convalescent serum:COV-021, convalescent serum:subject E (day 104), convalescent serum:subject E (day 28), convalescent serum:subject F (day 115), convalescent serum:subject F (day 48), convalescent serum:subject I (day 102), convalescent serum:subject I (day 26)"		
+Spike	504	504	"class 1:LY-CoV016, class 4:S2X259, class 4:S2X35"			
+Spike	505	505	"class 1:S2H14, class 4:S2X35"		Yes	
+Spike	506	506	class 4:S2X35			
+Spike	507	507	class 3:REGN10987			
+Spike	514	514	class 4:S2H97			
+Spike	516	516	class 4:S2H97			
+Spike	517	517			Yes	
+Spike	518	518	class 4:S2H97			
+Spike	527	527			Yes	
+Spike	528	528			Yes	
+Spike	614	614				Site 614: Increase of pseudotyped VSV particle production ex vivo. Increase of viral load in hamster upper respiratory tract. D->G
+Spike	671	692				Furin cleavage site
