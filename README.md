@@ -1,8 +1,9 @@
 # Early Detection of SARS-CoV-2 Variants of Interest
 
 This repository contains the code we make public for scoring emerging SARS-CoV-2 variants based on the algorithms described in 
-Wallace ZS et al., "Early Detection of Emerging SARS-CoV-2 Variants of Interest for Experimental Evaluation", Frontiers in
-Bioinformatics.
+Wallace ZS et al., "Early Detection of Emerging SARS-CoV-2 Variants of Interest for Experimental Evaluation", medRxiv. The manuscript
+is currently located at https://www.medrxiv.org/content/10.1101/2022.08.08.22278553v1 and to be is to be sumitted to Frontiers 
+in Bioinformatics.
 
 DEPENDENCIES: 
 
@@ -36,7 +37,7 @@ cd path/to/local/dir
 
 git clone https://github.com/zwallace425/SARS-CoV-2_Pipeline.git
 
-cd scripts
+cd SARS-CoV-2_Pipeline/scripts
 
 To score and rank full proteome variant constellations with the Composite Score (minimum commandline requirments):
 
@@ -74,7 +75,10 @@ To score and rank PANGO Lineages with the Emerging Lineage Score:
 
 The following are optional arguments that can be inputted with any of the analysis options:
 	
-	[REQUIRED ARGS] --period [D/W/2W/M] --interval [>=2 and <=6] --n_content [>0 and <1] --seq_length [NT Sequence Length] --min_date [>2019-11-01]
+	[REQUIRED ARGS] --period [D/W/2W/M] --interval [>=2 and <=6] --n_content [>0 and <1] --seq_length [NT Sequence Length] --min_date [>2019-11-01] --max_date [YYYY-MM-DD]
+
+If a --max_date argument is supplied, then the pipeline will compute a Composite Score up to that date instead of up to the current date,
+for the purpose of studying results from the past and comparing to the present.
 
 The ranking results will be printed to the commandline and automatically deposited in the "results" directory with the current date
 concatenated to the filename.  Please see the file "sample_composite_score.txt" in the "results" directory for an example output.
