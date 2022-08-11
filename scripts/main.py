@@ -39,7 +39,7 @@ def ProgramUsage():
 	print('\n')
 	print("[GISAID args] --WHO [WHO Name]")
 	print("[GISAID args] --PANGO [PANGO Lineage]")
-	print("[GISAID or GenBank/BV-BRC args] --period [D/W/2W/M] --interval [>=2 and <=6] --n_content [>=0 and <=1] --seq_length [Sequence Length] --min_date [>2019-11-01] --protein [SARS-CoV-2 protein]")
+	print("[GISAID or GenBank/BV-BRC args] --period [D/W/2W/M] --interval [>=2 and <=6] --n_content [>=0 and <=1] --seq_length [Sequence Length] --min_date [>2019-11-01] --max_date [YYYY-MM-DD] --protein [SARS-CoV-2 protein]")
 	print('\n')
 	print("NOTE: WHO or PANGO input only allowed with GISAID metadata")
 	print("NOTE: WHO or PANGO input not allowed with '--analyze lineages'. Unecessary analysis.")
@@ -74,6 +74,7 @@ if __name__ == "__main__":
 	parser.add_argument('--n_content', dest = 'n_content', type = str)
 	parser.add_argument('--seq_length', dest = 'seq_length', type = str)
 	parser.add_argument('--min_date', dest = 'min_date', type = str)
+	parser.add_argument('--max_date', dest = 'max_date', type = str)
 	parser.add_argument('--protein', dest = 'protein', type = str)
 	parser.add_argument('--WHO', dest = "who", type = str)
 	parser.add_argument('--PANGO', dest = "pango", type = str)
@@ -84,6 +85,7 @@ if __name__ == "__main__":
 
 	today = date.today().strftime("%Y-%m-%d")
 	min_date = date(date.today().year, 1, 1).strftime("%Y-%m-%d")
+	max_date = date(date.today().year, date.today().month, 1).strftime("%Y-%m-%d")
 
 	# Exit program if required commandline arguments are incorrect
 	if (args.gisaid and (args.ref or args.query)):
@@ -131,6 +133,9 @@ if __name__ == "__main__":
 	if args.min_date:
 		min_date = args.min_date
 
+	if args.max_date:
+		max_date = args.max_date
+
 	if args.who:
 		who = args.who
 		if who not in WHO_NAMES:
@@ -169,7 +174,7 @@ if __name__ == "__main__":
 	# Running the pipline on GISAID metadata or GenBank/BV-BRC fasta data
 	if args.gisaid:
 		gisaid = open_gisaid_metadata(args.gisaid)
-		gm_object = gm(gisaid, seq_length, n_content, min_date, who, pango)
+		gm_object = gm(gisaid, seq_length, n_content, min_date, max_date, who, pango)
 		if (args.analyze == "covariates"):
 			if args.protein:
 				prot_counts_df, prot_region_dates_df = gm_object.protein_counts(args.protein)

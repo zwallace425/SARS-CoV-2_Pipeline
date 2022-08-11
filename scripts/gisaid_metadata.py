@@ -16,7 +16,7 @@ from variant_dynamics import VariantDynamics as vd
 class GisaidMetadata(object):
 
 	# Intialize GISAID metadata dataframe and perform QC on the data
-	def __init__(self, gisaid_df, seq_length = 29400, n_content = 0.05, min_date = '2022-01-01', WHO = None, PANGO = None):
+	def __init__(self, gisaid_df, seq_length = 29400, n_content = 0.01, min_date = '2022-01-01', max_date = None, WHO = None, PANGO = None):
 		
 		print("Preparing GISAID Metadata ...")
 		
@@ -27,8 +27,12 @@ class GisaidMetadata(object):
 		gisaid_kept = gisaid_df[columns]
 		gisaid_kept = gisaid_kept[(gisaid_kept['Sequence length'] > seq_length) & (gisaid_kept['N-Content'] < n_content)]
 		gisaid_kept['Collection date'] = pd.to_datetime(gisaid_kept['Collection date'])
-		first_current_month = datetime.today().replace(day=1).strftime('%Y-%m-%d')
-		gisaid_kept = gisaid_kept[(gisaid_kept['Collection date'] < first_current_month) & (gisaid_kept['Collection date'] >= min_date)]
+		if max_date:
+			max_month = datetime.strptime(max_date, '%Y-%m-%d')
+			max_month = max_month.replace(day=1).strftime('%Y-%m-%d')
+		else:
+			max_month = datetime.today().replace(day=1).strftime('%Y-%m-%d')
+		gisaid_kept = gisaid_kept[(gisaid_kept['Collection date'] < max_month) & (gisaid_kept['Collection date'] >= min_date)]
 		gisaid_kept = gisaid_kept.drop_duplicates(subset = ['Accession ID'])
 		gisaid_kept = gisaid_kept[(gisaid_kept['AA Substitutions'] != "()")]
 		gisaid_kept = gisaid_kept.dropna()
