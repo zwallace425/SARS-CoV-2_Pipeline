@@ -1,9 +1,8 @@
 # Early Detection of SARS-CoV-2 Variants of Interest
 
-This repository contains the code we make public for scoring emerging SARS-CoV-2 variants based on the algorithms described in 
+This repository contains the code we make public for scoring and visualizing emerging SARS-CoV-2 variants based on the algorithms described in 
 Wallace ZS et al., "Early Detection of Emerging SARS-CoV-2 Variants of Interest for Experimental Evaluation", medRxiv. The manuscript
-is currently located at https://www.medrxiv.org/content/10.1101/2022.08.08.22278553v1 and to be is to be sumitted to Frontiers 
-in Bioinformatics.
+is currently located at https://www.medrxiv.org/content/10.1101/2022.08.08.22278553v1 and submitted to Frontiers in Bioinformatics.
 
 DEPENDENCIES: 
 
@@ -19,10 +18,12 @@ and predicted functional impacts.  Users can rank what we call variant constella
 of amino acid mutations relative to the Wuhan-Hu-1 reference strain concatenated and represented as one string.  Users
 can score and rank full proteome variant constellations, Spike protein variant constellations, or non-Spike variant constellations,
 such as ranking variant constellations found on NSP3 or NSP5.  In addition, this software allows users to rank individual
-amino acid mutations based on the same algorithm.
+amino acid mutations based on the same algorithm.  Lastly, this software allows for visualization of covariate, single mutation, or 
+PANGO lineage growth dynamics.
 
 To run this pipeline on GISAID data (recommended), you must have a GISAID account set up and request downloads of the metadata file.  Donwnload
-this file and input to the commandline.  Please keep in mind the GISAID metadata file is about 7.5 GB and growing.
+this file and input to the commandline.  Please keep in mind the GISAID metadata file is around 10 GB and growing, so minimize downloads
+and store appropriately.
 
 To run this pipeline on GenBank/BV-BRC SARS-CoV-2 sequence data in FASTA format, first download batches from
 https://www.viprbrc.org/brcDocs/datafiles/public_share/Corona/. As of now, the pipeline will only accept FASTA sequences from
@@ -38,6 +39,8 @@ cd path/to/local/dir
 git clone https://github.com/zwallace425/SARS-CoV-2_Pipeline.git
 
 cd SARS-CoV-2_Pipeline/scripts
+
+### (1) Scoring covariates/mutations/lineages:
 
 To score and rank full proteome variant constellations with the Composite Score (minimum commandline requirments):
 
@@ -73,15 +76,41 @@ To score and rank PANGO Lineages with the Emerging Lineage Score:
 
 	NOTE: Scoring PANGO Lineages not permitted with FASTA data. Additionally, any '--protein' input will be ignored
 
+### (2) Plotting growth of covariates/mutations/lineages:
+
+NOTE: The plots will only dispaly the 15 covariates/mutations/lineages with the highest prevlance within a six month window.
+NOTE: Plotting only allowed with GISAID Metatdata file
+
+To plot growth of full proteome covariates or mutations:
+
+	(13) Covariates: python main.py --gisaid [GISAID Metadata File] --plot covariates
+	(14) Single Mutations: pyton main.py --gisaid [GISAID Metadata File] --plot mutations
+
+To plot growth of protein specific covariates or mutations:
+
+	(15) Covariates: python main.py --gisaid [GISAID Metadata File] --plot covariates --protein [SARS-CoV-2 Protein]
+	(16) Single Mutations: python main.py --gisaid [GISAID Metadata File] --plot mutations --protein [SARS-CoV-2 Protein]
+
+To plot growth of PANGO Lineages:
+
+	(17) python main.py --gisaid [GISAID Metadata File] --plot lineages
+
+To plot growth of covariates, mutations, or lineages specific to a region:
+	
+	(18) [Commands 13 - 16] --region [REGION]
+
+
 The following are optional arguments that can be inputted with any of the analysis options:
 	
 	[REQUIRED ARGS] --period [D/W/2W/M] --interval [>=2 and <=6] --n_content [>0 and <1] --seq_length [NT Sequence Length] --min_date [>2019-11-01] --max_date [YYYY-MM-DD]
 
-If a --max_date argument is supplied, then the pipeline will compute a Composite Score up to that date instead of up to the current date,
+If a --max_date argument is supplied, then the pipeline will compute a Composite Score or plot up to that date instead of up to the current date,
 for the purpose of studying results from the past and comparing to the present.
 
 The ranking results will be printed to the commandline and automatically deposited in the "results" directory with the current date
 concatenated to the filename.  Please see the file "sample_composite_score.txt" in the "results" directory for an example output.
+
+The plotting results will be will be displayed to the user's screen and can be manually saved.
 
 There are data files that get built and saved during execuation of the pipeline and stored in the "data" directory.  This includes
 compressed JSON files for covariate/mutaton region-date counts, sequence isolate counts per region-date, variant constellations
@@ -114,10 +143,12 @@ variant_dynamics.py --- runs seq_to_covariate.py or is called from gisaid_metada
 variant_analysis.py --- computes prevalence and growth rates by date and region for each variant constellation or single mutation and stores
 	as a panel dataframe
 
-gisaid_metadata.py --- process GISAID metadata file and aggregate region-date counts for covariate sequences or single mutations
+gisaid_metadata.py --- process GISAID metadata file and aggregate region-date counts for covariate sequences, single mutations, or PANGO lineages
 
-variant_scoring.py --- score coviarates or single matations based on the spatial-temporal epidemiological dynamics as well as based on experimental 
-	evidence for functional impact
+variant_scoring.py --- score coviarates, single matations, or PANGO lineages based on the spatial-temporal epidemiological dynamics as well as 
+	based on experimental evidence for functional impact
+
+variant_plots.py --- plot growth over time of covariates, single mutations, or PANGO lineages based on sptail-temporal epidemiological dynamics
 
 NC_045512.2.fasta --- Wuhan-Hu-1 reference sequences necessary for alignments and computing variants
 
@@ -150,10 +181,9 @@ non-Spike_SFoCs.txt
 
 ## Final Remarks:
 
-We are continually updating this repository to enhance code efficiency, algorithms, analysis options, and user experience.  Currently the plotting analysis
-described in the manuscript is not available as that was originally designed for BV-BRC Emerging Variant Report spreadsheets generated from GISAID
-data and used for consulting with the NIAID SAVE Consortium, but we cannot publically share those spreadsheets and code due to GISAID licensing agreements.
-A public implementation of this will soon be made available.
+We are continually updating this repository to enhance code efficiency, algorithms, analysis options, and user experience.  In particular, if new knowledge
+for updating the Sequence Features of Concern list is available, such as sites notable for resistance against any therapuetics, we will update that tabe
+for Functional Impact Scoring.
 
 For any questions or bug catches please contact Zach Wallace at zwallace@jcvi.org or ask questions on GitHub for public discussion.
 
