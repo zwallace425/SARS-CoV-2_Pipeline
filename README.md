@@ -76,7 +76,7 @@ To score and rank PANGO Lineages with the Emerging Lineage Score:
 
 	NOTE: Scoring PANGO Lineages not permitted with FASTA data. Additionally, any '--protein' input will be ignored
 
-### (2) Plotting growth of covariates/mutations/lineages:
+### (2) Visualizing growth of covariates/mutations/lineages:
 
 NOTE: The plots will only dispaly the 15 covariates/mutations/lineages with the highest prevlance within a six month window.
 NOTE: Plotting only allowed with GISAID Metatdata file
@@ -182,7 +182,7 @@ non-Spike_SFoCs.txt
 ## Final Remarks:
 
 We are continually updating this repository to enhance code efficiency, algorithms, analysis options, and user experience.  In particular, if new knowledge
-for updating the Sequence Features of Concern list is available, such as sites notable for resistance against any therapuetics, we will update that tabe
+for updating the Sequence Features of Concern list is available, such as sites notable for resistance against any therapuetics, we will update that table
 for Functional Impact Scoring.
 
 For any questions or bug catches please contact Zach Wallace at zwallace@jcvi.org or ask questions on GitHub for public discussion.
