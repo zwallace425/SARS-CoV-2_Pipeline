@@ -116,8 +116,11 @@ class GisaidMetadata(object):
         	GisaidMetadata.cov_pango_to_df(cov_pango))
 	
 
-    # The functions collects the AA mutation counts by region-date from the GISAID metadata file.
-	def mutation_counts(self):
+	# The functions collects the AA mutation counts by region-date from the GISAID metadata file.
+	"""Parameters:
+		protein: Optional protein input to only compute mutations for
+	"""
+	def mutation_counts(self, protein = ""):
 
 		print("Aggregating mutation region-date counts ...")
 
@@ -160,6 +163,7 @@ class GisaidMetadata(object):
 
 			cov = cov[1:-1]
 			muts = cov.split(",")
+			muts = [ m for m in muts if protein+'_' in m ]
 			aa_prevalence = vd.aa_prevalence_main(aa_prevalence, muts, region, date)
 
 		print("Done aquiring region-date counts")
@@ -251,8 +255,10 @@ class GisaidMetadata(object):
 
 
 	# This function collects PANGO Lineage counts by region and date from the GISAID Metadata file.
-	# NOTE: The data returned from this function is not returned in any of our algorithms but is still
-	# helpful data to collect anyhow
+	# NOTE: The data returned from this function is not used in any of our scoring heuristics, as the
+	# Emerging Lineage Score actually requires covariate counts while mapping covariates to the lineage.
+	# However, this function is needed to collect the data for plotting lineage growth over time, as
+	# computed in variant_plots.py
 	def lineage_counts(self):
 
 		print("Aggregating PANGO Lineage region-date counts ...")

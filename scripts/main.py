@@ -13,6 +13,7 @@ from gisaid_metadata import GisaidMetadata as gm
 from variant_dynamics import VariantDynamics as vd
 from variant_analysis import VariantAnalysis as va
 from variant_scoring import VariantScoring as vs
+from variant_plots import VariantPlots as vp
 
 warnings.filterwarnings("ignore")
 
@@ -27,22 +28,31 @@ WHO_NAMES = ['Omicron', 'Delta', 'Alpha', 'Beta', 'Mu', 'Iota', 'Epsilon', 'Gamm
 # Requirements for running the pipeline
 def ProgramUsage():
 	print('\n')
-	print("USAGE: Commandline must have the minimum arguments:")
+	print("USAGE: The pipeline must either score or plot variants with the minimum commandline arguments:")
 	print('\n')
-	print("For GISAID Data:")
-	print("python main.py --gisaid [GISAID Metadata File] --analyze [covariates/mutations/lineages]")
+	print("Scoring GISAID Data:")
+	print("python main.py --gisaid [GISAID METADATA FILE] --analyze [covariates/mutations/lineages]")
 	print("OR")
-	print("For GenBank/BV-BRC Data:")
-	print("python main.py --ref NC_045512.2.fasta --query [FASTA file] --analyze [covariates/mutations]")
+	print("Scoring GenBank/BV-BRC Data:")
+	print("python main.py --ref NC_045512.2.fasta --query [FASTA FILE] --analyze [covariates/mutations]")
+	print('\n')
+	print("Plotting GISAID Data:")
+	print("python main.py --gisaid [GISAID METADATA FILE] --plot [covariates/mutations/lineages")
+	print('\n')
+	print("NOTE: NO PLOTS WITH GENBANK/BV-BRC FASTA DATA. INCONVIENT EXPENSIVE COMPUTING.")
+	print('\n')
+	print("---------------------------------------------------------------------------------------------------")
 	print('\n')
 	print("OPTIONAL: The following are optional arguments following the required:")
 	print('\n')
-	print("[GISAID args] --WHO [WHO Name]")
-	print("[GISAID args] --PANGO [PANGO Lineage]")
-	print("[GISAID or GenBank/BV-BRC args] --period [D/W/2W/M] --interval [>=2 and <=6] --n_content [>=0 and <=1] --seq_length [Sequence Length] --min_date [>2019-11-01] --max_date [YYYY-MM-DD] --protein [SARS-CoV-2 protein]")
+	print("[GISAID args] --WHO [WHO NAME]")
+	print("[GISAID args] --PANGO [PANGO LINEAGE]")
+	print("[GISAID or GenBank/BV-BRC args] --period [D/W/2W/M] --interval [>=2 AND <=6] --n_content [>0 AND <1] --seq_length [SEQUENCE LENGTH] --min_date [>2019-11-01] --max_date [YYYY-MM-DD] --protein [SARS-CoV-2 PROTEIN] --region [REGION")
 	print('\n')
-	print("NOTE: WHO or PANGO input only allowed with GISAID metadata")
-	print("NOTE: WHO or PANGO input not allowed with '--analyze lineages'. Unecessary analysis.")
+	print("NOTE: WHO or PANGO input only allowed with GISAID metadata.")
+	print("NOTE: WHO and PANGO input not allowed together.")
+	print("NOTE: WHO or PANGO input not allowed with '--analyze lineages' or '--plot lineages'. Unecessary analysis.")
+	print("NOTE: --region not allowed with --analyze.  Scoring algorithms require global data.")
 	print('\n')
 
 
@@ -63,10 +73,12 @@ if __name__ == "__main__":
 	
 	# Required arguments:
 	parser.add_argument('--gisaid', dest = 'gisaid', type = str)
-	parser.add_argument('--analyze', dest = 'analyze', type = str)
 	# Or (following two must be together)
 	parser.add_argument('--ref', dest = 'ref', type = str)
 	parser.add_argument('--query', dest = 'query', type = str)
+	# And one of the following only
+	parser.add_argument('--analyze', dest = 'analyze', type = str)
+	parser.add_argument('--plot', dest = 'plot', type = str)
 
 	# Optional arguments
 	parser.add_argument('--period', dest = 'period', type = str)
@@ -76,13 +88,15 @@ if __name__ == "__main__":
 	parser.add_argument('--min_date', dest = 'min_date', type = str)
 	parser.add_argument('--max_date', dest = 'max_date', type = str)
 	parser.add_argument('--protein', dest = 'protein', type = str)
-	parser.add_argument('--WHO', dest = "who", type = str)
-	parser.add_argument('--PANGO', dest = "pango", type = str)
+	parser.add_argument('--WHO', dest = 'who', type = str)
+	parser.add_argument('--PANGO', dest = 'pango', type = str)
+	parser.add_argument('--region', dest = 'region', type = str)
 	args = parser.parse_args()
 
 	spike_sfoc = pd.read_csv("data/Spike_SFoCs.txt", sep = '\t')
 	non_spike_sfoc = pd.read_csv("data/Non-Spike_SFoCs.txt", sep = '\t')
 
+	# Default min date first of year, default max date first of current month
 	today = date.today().strftime("%Y-%m-%d")
 	min_date = date(date.today().year, 1, 1).strftime("%Y-%m-%d")
 	max_date = date(date.today().year, date.today().month, 1).strftime("%Y-%m-%d")
@@ -90,20 +104,32 @@ if __name__ == "__main__":
 	# Exit program if required commandline arguments are incorrect
 	if (args.gisaid and (args.ref or args.query)):
 		sys.exit(ProgramUsage())
+	if (args.analyze and args.plot):
+		sys.exit(ProgramUsage())
 	if ((args.ref and (not args.query)) or (args.query and (not args.ref))):
 		sys.exit(ProgramUsage())
 	if (args.ref and (args.analyze == "lineages")):
 		sys.exit(ProgramUsage())
 	if (args.ref and (args.who or args.pango)):
 		sys.exit(ProgramUsage())
-	if (args.analyze != "covariates" and args.analyze != "mutations" and args.analyze != "lineages"):
-		sys.exit(ProgramUsage())
+	if args.analyze:
+		if (args.analyze != "covariates" and args.analyze != "mutations" and args.analyze != "lineages"):
+			sys.exit(ProgramUsage())
+	if args.plot:
+		if (args.plot != "covariates" and args.plot != "mutations" and args.plot != "lineages"):
+			sys.exit(ProgramUsage())	
 	if (args.who and args.pango):
 		sys.exit(ProgramUsage())
 	if (args.analyze == "lineages" and (args.who or args.pango)):
 		sys.exit(ProgramUsage())
+	if (args.plot == "lineages" and (args.who or args.pango)):
+		sys.exit(ProgramUsage())	
+	if (args.analyze and args.region):
+		sys.exit(ProgramUsage())
+	if (args.plot and args.ref):
+		sys.exit(ProgramUsage())
 	
-	# Initialize optional arguments
+	# Initialize all optional arguments
 	if args.period:
 		period = args.period
 		if args.period not in ['D', 'W', '2W', 'M']:
@@ -116,7 +142,11 @@ if __name__ == "__main__":
 		if (interval > 6 or interval < 2):
 			sys.exit(ProgramUsage())
 	else:
-		interval = 3
+		# Different intialized interval for scoring vs plotting
+		if args.analyze:
+			interval = 3
+		elif args.plot:
+			interval = 6
 	
 	if args.n_content:
 		n_content = float(args.n_content)
@@ -146,12 +176,12 @@ if __name__ == "__main__":
 			print('\n')
 			sys.exit()
 	else:
-		who = None
+		who = ""
 
 	if args.pango:
 		pango = args.pango
 	else:
-		pango = None
+		pango = ""
 
 	if args.protein:
 		if (args.gisaid and (args.protein not in GISAID_PROTEINS)):
@@ -168,62 +198,85 @@ if __name__ == "__main__":
 			print("Valid BV-BRC protein entries:", BVBRC_PROTEINS)
 			print('\n')
 			sys.exit()
+		else:
+			protein = args.protein
+	else:
+		protein = ""
+
+	# Specific for plotting, specifies growth dynamics for whole world or individual regions
+	if args.plot and args.region:
+		region = args.region
+		world_growth = False
+	elif args.plot and (not args.region):
+		region = 'World'
+		world_growth = True
+	else:
+		world_growth = False
 
 
 
-	# Running the pipline on GISAID metadata or GenBank/BV-BRC fasta data
+	# Running the pipline on GISAID metadata
 	if args.gisaid:
 		gisaid = open_gisaid_metadata(args.gisaid)
 		gm_object = gm(gisaid, seq_length, n_content, min_date, max_date, who, pango)
-		if (args.analyze == "covariates"):
-			if args.protein:
-				prot_counts_df, prot_region_dates_df = gm_object.protein_counts(args.protein)
-				prot_prevalence_df = va.analyze_dynamics(prot_counts_df, prot_region_dates_df, period)
-				if args.protein == "Spike":
-					scores = vs(prot_prevalence_df, interval).composite_score(spike_sfoc = spike_sfoc)
-				else:
-					scores = vs(prot_prevalence_df, interval).composite_score(non_spike_sfoc = non_spike_sfoc)
+		if (args.analyze == "covariates" or args.plot == "covariates"):
+			if protein:
+				prot_counts_df, prot_region_dates_df = gm_object.protein_counts(protein)
+				prot_prevalence_df = va.analyze_dynamics(prot_counts_df, prot_region_dates_df, period, world_growth)
+				if args.analyze:
+					if protein == "Spike":
+						scores = vs(prot_prevalence_df, interval).composite_score(spike_sfoc = spike_sfoc)
+					else:
+						scores = vs(prot_prevalence_df, interval).composite_score(non_spike_sfoc = non_spike_sfoc)
+				elif args.plot:
+					vp(prot_prevalence_df, interval, region, period).plot_covariates(protein, pango, who)
 			else:
 				cov_counts_df, cov_region_dates_df, cov_pango_df = gm_object.covariate_counts()
-				cov_prevalence_df = va.analyze_dynamics(cov_counts_df, cov_region_dates_df, period)
-				scores = vs(cov_prevalence_df, interval).composite_score(spike_sfoc = spike_sfoc, non_spike_sfoc = non_spike_sfoc)
-				scores = cov_pango_df.merge(scores, on = 'Variant').sort_values(by = 'Composite Score', ascending = False).reset_index(drop=True)
-			scores.to_csv("results/gisaid_composite_scores_"+period+"_"+today+".txt", sep = '\t', index = False)
-			print(scores)
-		elif (args.analyze == "mutations"):
-			aa_counts_df, aa_region_dates_df = gm_object.mutation_counts()
-			aa_prevalence_df = va.analyze_dynamics(aa_counts_df, aa_region_dates_df, period)
-			if (args.protein):
-				if args.protein == "Spike":
-					spike_scores = vs(aa_prevalence_df, interval).mutation_prevalence_score(Spike = True)
-					spike_scores.to_csv("results/gisaid_spike_mutation_scores"+period+"_"+today+".txt", sep = '\t', index = False)
-					print(spike_scores)
+				cov_prevalence_df = va.analyze_dynamics(cov_counts_df, cov_region_dates_df, period, world_growth)
+				if args.analyze:
+					scores = vs(cov_prevalence_df, interval).composite_score(spike_sfoc = spike_sfoc, non_spike_sfoc = non_spike_sfoc)
+					scores = cov_pango_df.merge(scores, on = 'Variant').sort_values(by = 'Composite Score', ascending = False).reset_index(drop=True)
+				elif args.plot:
+					vp(cov_prevalence_df, interval, region, period).plot_covariates(protein, pango, who)
+			if args.analyze:
+				scores.to_csv("results/gisaid_composite_scores_"+period+"_"+today+".txt", sep = '\t', index = False)
+				print(scores)
+		elif (args.analyze == "mutations" or args.plot == "mutations"):
+			aa_counts_df, aa_region_dates_df = gm_object.mutation_counts(protein)
+			aa_prevalence_df = va.analyze_dynamics(aa_counts_df, aa_region_dates_df, period, world_growth)
+			if args.analyze:
+				if protein:
+					prot_scores = vs(aa_prevalence_df, interval).mutation_prevalence_score()
+					prot_scores.to_csv("results/gisaid_"+protein+"_mutation_scores"+period+"_"+today+".txt", sep = '\t', index = False)
+					print(prot_scores)
 				else:
+					spike_scores = vs(aa_prevalence_df, interval).mutation_prevalence_score(Spike = True)
 					non_spike_scores = vs(aa_prevalence_df, interval).mutation_prevalence_score(nonSpike = True)
-					non_spike_scores = non_spike_scores[non_spike_scores['Variant'].str.contains(args.protein)]
-					non_spike_scores.to_csv("results/gisaid_"+args.protein+"_mutation_scores"+period+"_"+today+".txt", sep = '\t', index = False)
+					spike_scores.to_csv("results/gisaid_spike_mutation_scores_"+period+"_"+today+".txt", sep = '\t', index = False)
+					non_spike_scores.to_csv("results/gisaid_non_spike_mutation_scores_"+period+"_"+today+".txt", sep = '\t', index = False)
+					print("Spike mutations ...")
+					print(spike_scores)
+					print('\n')
+					print("Non-Spike mutations ...")
 					print(non_spike_scores)
-			else:
-				spike_scores = vs(aa_prevalence_df, interval).mutation_prevalence_score(Spike = True)
-				non_spike_scores = vs(aa_prevalence_df, interval).mutation_prevalence_score(nonSpike = True)
-				spike_scores.to_csv("results/gisaid_spike_mutation_scores_"+period+"_"+today+".txt", sep = '\t', index = False)
-				non_spike_scores.to_csv("results/gisaid_non_spike_mutation_scores_"+period+"_"+today+".txt", sep = '\t', index = False)
-				print("Spike mutations ...")
-				print(spike_scores)
-				print('\n')
-				print("Non-Spike mutations ...")
-				print(non_spike_scores)
-		elif (args.analyze == "lineages"):
-			cov_counts_df, cov_region_dates_df, cov_pango_df = gm_object.covariate_counts()
-			cov_prevalence_df = va.analyze_dynamics(cov_counts_df, cov_region_dates_df, period)
-			cov_prevalence_df = cov_pango_df.merge(cov_prevalence_df, on = 'Variant')
-			scores = vs(cov_prevalence_df, interval).emerging_lineage_score()
-			scores.to_csv("results/gisaid_lineage_scores"+period+"_"+today+".txt", sep = '\t', index = False)
-			print(scores)
+			elif args.plot:
+					vp(aa_prevalence_df, interval, region, period).plot_mutations(protein, pango, who)
+		elif (args.analyze == "lineages" or args.plot == "lineages"):
+			if args.analyze:
+				cov_counts_df, cov_region_dates_df, cov_pango_df = gm_object.covariate_counts()
+				cov_prevalence_df = va.analyze_dynamics(cov_counts_df, cov_region_dates_df, period, world_growth)
+				cov_prevalence_df = cov_pango_df.merge(cov_prevalence_df, on = 'Variant')
+				scores = vs(cov_prevalence_df, interval).emerging_lineage_score()
+				scores.to_csv("results/gisaid_lineage_scores"+period+"_"+today+".txt", sep = '\t', index = False)
+				print(scores)
+			elif args.plot:
+				lineage_counts_df, lineage_region_dates_df = gm_object.lineage_counts()
+				lineage_prevalence_df = va.analyze_dynamics(lineage_counts_df, lineage_region_dates_df, period, world_growth)
+				vp(lineage_prevalence_df, interval, region, period).plot_lineages()
 
 
 
-
+	# Running pipeline on GenBank/BV-BRC fasta data
 	elif args.ref:
 		
 		start = time.time()
@@ -232,9 +285,9 @@ if __name__ == "__main__":
 		cov_counts_df, aa_counts_df, prot_counts_dict, region_dates_df = vd.spatial_temporal_prevalence(args.ref, clean_sequences, qc_storage_file = 'data/SARS-CoV-2_Sequence_QC.json.gz')
 
 		if (args.analyze == "covariates"):
-			if args.protein:
-				cov_prevalence_df = va.analyze_protein_covariates(prot_counts_dict, region_dates_df, args.protein, period)
-				if args.protein == "Spike":
+			if protein:
+				cov_prevalence_df = va.analyze_protein_covariates(prot_counts_dict, region_dates_df, protein, period)
+				if protein == "Spike":
 					scores = vs(cov_prevalence_df, interval).composite_score(spike_sfoc = spike_sfoc)
 				else:
 					scores = vs(cov_prevalence_df, interval).composite_score(non_spike_sfoc = non_spike_sfoc)
@@ -245,15 +298,15 @@ if __name__ == "__main__":
 			print(scores)
 		elif (args.analyze == "mutations"):
 			aa_prevalence_df = va.analyze_dynamics(aa_counts_df, region_dates_df, period)
-			if (args.protein):
-				if args.protein == "Spike":
+			if (protein):
+				if protein == "Spike":
 					spike_scores = vs(aa_prevalence_df, interval).mutation_prevalence_score(Spike = True)
 					spike_scores.to_csv("results/bvbrc_spike_mutation_scores"+period+"_"+today+".txt", sep = '\t', index = False)
 					print(spike_scores)
 				else:
 					non_spike_scores = vs(aa_prevalence_df, interval).mutation_prevalence_score(nonSpike = True)
-					non_spike_scores = non_spike_scores[non_spike_scores['Variant'].str.contains(args.protein)]
-					non_spike_scores.to_csv("results/bvbrc_"+args.protein+"_mutation_scores"+period+"_"+today+".txt", sep = '\t', index = False)
+					non_spike_scores = non_spike_scores[non_spike_scores['Variant'].str.contains(protein)]
+					non_spike_scores.to_csv("results/bvbrc_"+protein+"_mutation_scores"+period+"_"+today+".txt", sep = '\t', index = False)
 					print(non_spike_scores)
 			else:
 				spike_scores.to_csv("results/bvbrc_spike_mutation_scores"+period+"_"+today+".txt", sep = '\t', index = False)
