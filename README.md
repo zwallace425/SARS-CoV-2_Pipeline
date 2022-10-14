@@ -179,6 +179,8 @@ In addition to pseudocode, the materials directory offers the Spike Sequence Fea
 additional location other than the "scripts/data" directory, the latter being meant for the pipeline.  These data are labeled as Spike_SFoCs.txt and 
 non-Spike_SFoCs.txt
 
+Finally, we offer the Supplementary Materials file from the manuscript labeled as "Manuscript_Supplementary_Material.pdf".
+
 ## Final Remarks:
 
 We are continually updating this repository to enhance code efficiency, algorithms, analysis options, and user experience.  In particular, if new knowledge
