@@ -1,8 +1,9 @@
 # Early Detection of SARS-CoV-2 Variants of Interest
 
 This repository contains the code we make public for scoring and visualizing emerging SARS-CoV-2 variants based on the algorithms described in 
-Wallace ZS et al., "Early Detection of Emerging SARS-CoV-2 Variants of Interest for Experimental Evaluation", medRxiv. The manuscript
-is currently located at https://www.medrxiv.org/content/10.1101/2022.08.08.22278553v1 and submitted to Frontiers in Bioinformatics.
+Wallace ZS, Davis J, Niewiadomska AM, Olson RD, Shukla M, Stevens R, Zhang Y, Zmasek CM and Scheuermann RH (2022) Early detection of emerging 
+SARS-CoV-2 variants of interest for experimental evaluation. Front. Bioinform. 2:1020189. doi: 10.3389/fbinf.2022.1020189,
+https://www.frontiersin.org/articles/10.3389/fbinf.2022.1020189/full
 
 DEPENDENCIES: 
 
