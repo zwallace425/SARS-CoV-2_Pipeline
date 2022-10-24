@@ -15,11 +15,11 @@ Please use pip install to install these dependencies prior to running the softwa
 
 Users can score and rank SARS-CoV-2 variants as the emerge for priotizing experimental evaluation based on newly updated data 
 in the GISAID metadatafile or GenBank/BV-BRC FASTA files.  Rankings are based on a heuristic that combines epidemiological dynamics 
-and predicted functional impacts.  Users can rank what we call variant constellations, or covariates for short, which are a constellation 
+and predicted functional impacts.  Users can rank what we call variant constellations, or covariants for short, which are a constellation 
 of amino acid mutations relative to the Wuhan-Hu-1 reference strain concatenated and represented as one string.  Users
 can score and rank full proteome variant constellations, Spike protein variant constellations, or non-Spike variant constellations,
 such as ranking variant constellations found on NSP3 or NSP5.  In addition, this software allows users to rank individual
-amino acid mutations based on the same algorithm.  Lastly, this software allows for visualization of covariate, single mutation, or 
+amino acid mutations based on the same algorithm.  Lastly, this software allows for visualization of covariant, single mutation, or 
 PANGO lineage growth dynamics.
 
 To run this pipeline on GISAID data (recommended), you must have a GISAID account set up and request downloads of the metadata file.  Donwnload
@@ -41,12 +41,12 @@ git clone https://github.com/zwallace425/SARS-CoV-2_Pipeline.git
 
 cd SARS-CoV-2_Pipeline/scripts
 
-### (1) Scoring covariates/mutations/lineages:
+### (1) Scoring covariants/mutations/lineages:
 
 To score and rank full proteome variant constellations with the Composite Score (minimum commandline requirments):
 
-	(1) GISAID: python main.py --gisaid [GISAID Metadata File] --analyze covariates
-	(2) GenBank/BV-BRC: python main.py --ref NC_045512.2.fasta --query [FASTA File] --analyze covariates
+	(1) GISAID: python main.py --gisaid [GISAID Metadata File] --analyze covariants
+	(2) GenBank/BV-BRC: python main.py --ref NC_045512.2.fasta --query [FASTA File] --analyze covariants
 
 To score and rank protein-specific variant constellations with the Composite Score:
 
@@ -63,13 +63,13 @@ To score and rank protein-specific amino acid mutations with the Mutation Preval
 
 To score and rank variant constellations or single amino acid mutations within a specific PANGO Lineage or WHO Name:
 
-	(7) python main.py --gisaid [GISAID Metadata File] --analyze covariates --WHO [WHO Name]
-	(8) python main.py --gisaid [GISAID Metadata File] --analyze covariates --PANGO [PANGO Lineage]
+	(7) python main.py --gisaid [GISAID Metadata File] --analyze covariants --WHO [WHO Name]
+	(8) python main.py --gisaid [GISAID Metadata File] --analyze covariants --PANGO [PANGO Lineage]
 	(9) python main.py --gisaid [GISAID Metadata File] --analyze mutations --WHO [WHO Name]
 	(10) python main.py --gisaid [GISAID Metadata File] --analyze mutations --PANGO [PANGO Lineage]
 	(11) [ANY OF THE ABOVE] --protein [SARS-CoV-2 Protein]
 
-	NOTE: Scoring of covariates/mutations specific to a PANGO Lineage/WHO Name not permitted with FASTA data
+	NOTE: Scoring of covariants/mutations specific to a PANGO Lineage/WHO Name not permitted with FASTA data
 
 To score and rank PANGO Lineages with the Emerging Lineage Score:
 	
@@ -77,26 +77,26 @@ To score and rank PANGO Lineages with the Emerging Lineage Score:
 
 	NOTE: Scoring PANGO Lineages not permitted with FASTA data. Additionally, any '--protein' input will be ignored
 
-### (2) Visualizing growth of covariates/mutations/lineages:
+### (2) Visualizing growth of covariants/mutations/lineages:
 
-NOTE: The plots will only dispaly the 15 covariates/mutations/lineages with the highest prevlance within a six month window.
+NOTE: The plots will only dispaly the 15 covariants/mutations/lineages with the highest prevlance within a six month window.
 NOTE: Plotting only allowed with GISAID Metatdata file
 
-To plot growth of full proteome covariates or mutations:
+To plot growth of full proteome covariants or mutations:
 
-	(13) Covariates: python main.py --gisaid [GISAID Metadata File] --plot covariates
+	(13) Covariants: python main.py --gisaid [GISAID Metadata File] --plot covariants
 	(14) Single Mutations: pyton main.py --gisaid [GISAID Metadata File] --plot mutations
 
-To plot growth of protein specific covariates or mutations:
+To plot growth of protein specific covariants or mutations:
 
-	(15) Covariates: python main.py --gisaid [GISAID Metadata File] --plot covariates --protein [SARS-CoV-2 Protein]
+	(15) Covariants: python main.py --gisaid [GISAID Metadata File] --plot covariants --protein [SARS-CoV-2 Protein]
 	(16) Single Mutations: python main.py --gisaid [GISAID Metadata File] --plot mutations --protein [SARS-CoV-2 Protein]
 
 To plot growth of PANGO Lineages:
 
 	(17) python main.py --gisaid [GISAID Metadata File] --plot lineages
 
-To plot growth of covariates, mutations, or lineages specific to a region:
+To plot growth of covariants, mutations, or lineages specific to a region:
 	
 	(18) [Commands 13 - 16] --region [REGION]
 
@@ -114,12 +114,12 @@ concatenated to the filename.  Please see the file "sample_composite_score.txt" 
 The plotting results will be will be displayed to the user's screen and can be manually saved.
 
 There are data files that get built and saved during execuation of the pipeline and stored in the "data" directory.  This includes
-compressed JSON files for covariate/mutaton region-date counts, sequence isolate counts per region-date, variant constellations
+compressed JSON files for covariant/mutaton region-date counts, sequence isolate counts per region-date, variant constellations
 mapping to accessions, and pickled dataframe files for storing variant/matution region-date counts and region-date isolate counts
 in dataframe format.  Also initially included in the "data" directory are files necessary for scoring functional impact --- Spike_SFoCs.txt
 and non-Spike_SFoCs.txt.  DO NOT remove those files from the "data" directory!
 
-When running the pipeline on GenBank/BV-BRC FASTA data, the stored files in the "data" directory are more extensive.  On top of covariate/mutation
+When running the pipeline on GenBank/BV-BRC FASTA data, the stored files in the "data" directory are more extensive.  On top of covariant/mutation
 region-date counts and region-date isolate counts, the pipeline will store a file titled "bvbrc_variant_mappings.json.gz", a compressed JSON
 file that maps each each nucleotide sequence to the full variant constellation as well as synonymous, non-synonymous mutations, and exact protein
 regions where ambiguous nucleotides were identified.  There is also a file titled "bvbrc_SARS-CoV-2_Sequence_QC.json.gz", which is a compressed
@@ -128,7 +128,7 @@ the record failed any metadata criteria like no region or date.
 
 ## Files:
 
-When running the pipeline to score covariates with the GISAID metadata file, compute time is no more than 15 minutes.
+When running the pipeline to score covariants with the GISAID metadata file, compute time is no more than 15 minutes.
 When running the pipeline on FASTA files that includes a batch download for a single month, compute time will be a few hours.
 
 The following are key files in the "scripts" directory: 
@@ -136,20 +136,20 @@ The following are key files in the "scripts" directory:
 clean_mol_seq.py --- quality control step and filtering of ambiguous nucleotides (courtesy of Christian Zmasek)
 
 seq_to_covariate.py --- computing the variant constellation, synonymous nucleotide mutations, non-synonymous nucleotide mutations, and 
-	locations of ambiguous regions by protein
+	locations of ambiguous regions by protein, (Note, covariate is another term for covariant)
 
-variant_dynamics.py --- runs seq_to_covariate.py or is called from gisaid_metadata.py and collects all variant constellations, single 
+variant_dynamics.py --- runs seq_to_covariant.py or is called from gisaid_metadata.py and collects all variant constellations, single 
 	amino acid mutations, and counts by region and date and stores in JSON and pickled dataframes
 
 variant_analysis.py --- computes prevalence and growth rates by date and region for each variant constellation or single mutation and stores
 	as a panel dataframe
 
-gisaid_metadata.py --- process GISAID metadata file and aggregate region-date counts for covariate sequences, single mutations, or PANGO lineages
+gisaid_metadata.py --- process GISAID metadata file and aggregate region-date counts for covariant sequences, single mutations, or PANGO lineages
 
 variant_scoring.py --- score coviarates, single matations, or PANGO lineages based on the spatial-temporal epidemiological dynamics as well as 
 	based on experimental evidence for functional impact
 
-variant_plots.py --- plot growth over time of covariates, single mutations, or PANGO lineages based on sptail-temporal epidemiological dynamics
+variant_plots.py --- plot growth over time of covariants, single mutations, or PANGO lineages based on sptail-temporal epidemiological dynamics
 
 NC_045512.2.fasta --- Wuhan-Hu-1 reference sequences necessary for alignments and computing variants
 
@@ -169,6 +169,8 @@ test_variant_analysis.py --- used or testing variant_analysis.py
 genomes_test_run.fasta --- 20 genomes sampled from ViPR used for testing the pipeline
 
 SARS2_April_500.fasta -- 500 genomes sampled from ViPR in the month of April 2022 used for testing
+
+NOTE: Throughout the python scripts, often times we refer to "covariant" as "covariate". They mean the same thing, variant constellation.
 
 ## Supplementary Material:
 
