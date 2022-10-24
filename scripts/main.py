@@ -31,13 +31,13 @@ def ProgramUsage():
 	print("USAGE: The pipeline must either score or plot variants with the minimum commandline arguments:")
 	print('\n')
 	print("Scoring GISAID Data:")
-	print("python main.py --gisaid [GISAID METADATA FILE] --analyze [covariates/mutations/lineages]")
+	print("python main.py --gisaid [GISAID METADATA FILE] --analyze [covariants/mutations/lineages]")
 	print("OR")
 	print("Scoring GenBank/BV-BRC Data:")
-	print("python main.py --ref NC_045512.2.fasta --query [FASTA FILE] --analyze [covariates/mutations]")
+	print("python main.py --ref NC_045512.2.fasta --query [FASTA FILE] --analyze [covariants/mutations]")
 	print('\n')
 	print("Plotting GISAID Data:")
-	print("python main.py --gisaid [GISAID METADATA FILE] --plot [covariates/mutations/lineages")
+	print("python main.py --gisaid [GISAID METADATA FILE] --plot [covariants/mutations/lineages")
 	print('\n')
 	print("NOTE: NO PLOTS WITH GENBANK/BV-BRC FASTA DATA. INCONVIENT EXPENSIVE COMPUTING.")
 	print('\n')
@@ -113,10 +113,10 @@ if __name__ == "__main__":
 	if (args.ref and (args.who or args.pango)):
 		sys.exit(ProgramUsage())
 	if args.analyze:
-		if (args.analyze != "covariates" and args.analyze != "mutations" and args.analyze != "lineages"):
+		if (args.analyze != "covariants" and args.analyze != "mutations" and args.analyze != "lineages"):
 			sys.exit(ProgramUsage())
 	if args.plot:
-		if (args.plot != "covariates" and args.plot != "mutations" and args.plot != "lineages"):
+		if (args.plot != "covariants" and args.plot != "mutations" and args.plot != "lineages"):
 			sys.exit(ProgramUsage())	
 	if (args.who and args.pango):
 		sys.exit(ProgramUsage())
@@ -219,7 +219,7 @@ if __name__ == "__main__":
 	if args.gisaid:
 		gisaid = open_gisaid_metadata(args.gisaid)
 		gm_object = gm(gisaid, seq_length, n_content, min_date, max_date, who, pango)
-		if (args.analyze == "covariates" or args.plot == "covariates"):
+		if (args.analyze == "covariants" or args.plot == "covariants"):
 			if protein:
 				prot_counts_df, prot_region_dates_df = gm_object.protein_counts(protein)
 				prot_prevalence_df = va.analyze_dynamics(prot_counts_df, prot_region_dates_df, period, world_growth)
@@ -284,7 +284,7 @@ if __name__ == "__main__":
 		kept_acc = cms.clean_mol_seqs(args.query, clean_sequences, seq_length, 1 - n_content, True, 'data/SARS-CoV-2_Sequence_QC.json.gz')
 		cov_counts_df, aa_counts_df, prot_counts_dict, region_dates_df = vd.spatial_temporal_prevalence(args.ref, clean_sequences, qc_storage_file = 'data/SARS-CoV-2_Sequence_QC.json.gz')
 
-		if (args.analyze == "covariates"):
+		if (args.analyze == "covariants"):
 			if protein:
 				cov_prevalence_df = va.analyze_protein_covariates(prot_counts_dict, region_dates_df, protein, period)
 				if protein == "Spike":
