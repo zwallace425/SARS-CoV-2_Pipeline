@@ -67,7 +67,6 @@ class VariantScoring(object):
 			data = data[(data['Variant'].isin(covariates))]
 
 		significant_variants = data[(data['Variant Count'] > 10) & (data['Date'] == max(data['Date']))]
-		#significant_variants = data
 		significant_variants = significant_variants[['Variant', 'Region']]
 		significant_variants_df = significant_variants.merge(data, on = ['Variant', 'Region']).drop_duplicates()
 		significant_variants_df = significant_variants_df[(significant_variants_df['Prevalence'] > 0.05) | (significant_variants_df['Growth'] > 5)]
