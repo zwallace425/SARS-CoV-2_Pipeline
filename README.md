@@ -7,9 +7,9 @@ https://www.frontiersin.org/articles/10.3389/fbinf.2022.1020189/full
 
 DEPENDENCIES: 
 
-	python >=3.x, pandas, edlib, Biopython, collections, typing, compress_json, datetime
+To install dependencies, run the following in the root directory:
 
-Please use pip install to install these dependencies prior to running the software.
+	source env_setup.sh
 
 ## Introduction: 
 
