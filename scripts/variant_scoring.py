@@ -39,8 +39,13 @@ class VariantScoring(object):
 			sys.exit("Input Error: Must input Spike SFoC dataframe, Non-Spike SFoC dataframe, or both.")
 		
 		prevalence_score = VariantScoring.sequence_prevalence_score(self, covariates = covariates)
-		impact_score = VariantScoring.functional_impact_score(covariates = list(prevalence_score['Variant']), spike_sfoc = spike_sfoc, non_spike_sfoc = non_spike_sfoc)
-		composite_score = pd.merge(prevalence_score, impact_score, on = "Variant")
+
+		if covariates:
+			impact_score = VariantScoring.functional_impact_score(covariates = covariates, spike_sfoc = spike_sfoc, non_spike_sfoc = non_spike_sfoc)
+		else:
+			impact_score = VariantScoring.functional_impact_score(covariates = list(prevalence_score['Variant']), spike_sfoc = spike_sfoc, non_spike_sfoc = non_spike_sfoc)
+		
+		composite_score = pd.merge(prevalence_score, impact_score, on = "Variant", how = "outer").fillna(0)
 		composite_score['Composite Score'] = composite_score['Sequence Prevalence Score'] + composite_score['Functional Impact Score']
 		composite_ranking = composite_score.sort_values(by = ['Composite Score'], ascending = [False]).drop_duplicates().reset_index(drop=True).dropna()
 
@@ -62,6 +67,7 @@ class VariantScoring(object):
 			data = data[(data['Variant'].isin(covariates))]
 
 		significant_variants = data[(data['Variant Count'] > 10) & (data['Date'] == max(data['Date']))]
+		#significant_variants = data
 		significant_variants = significant_variants[['Variant', 'Region']]
 		significant_variants_df = significant_variants.merge(data, on = ['Variant', 'Region']).drop_duplicates()
 		significant_variants_df = significant_variants_df[(significant_variants_df['Prevalence'] > 0.05) | (significant_variants_df['Growth'] > 5)]
@@ -205,6 +211,8 @@ class VariantScoring(object):
 			sfocs.reset_index(inplace = True, drop = True)
 			if (not ((aa_pos == (prev_pos + 1)) and (mut == "-") and (prev_mut	== "-"))):
 				for k in range(len(sfocs)):
+					if (aa_pos == 614):
+						sfoc_score += 1
 					if (pd.notna(sfocs.at[k,"mAb escape"])):
 						if ("class 1" in sfocs.loc[k].at["mAb escape"]):
 							sfoc_score += 1

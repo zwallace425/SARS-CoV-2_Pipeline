@@ -16,7 +16,7 @@ from variant_dynamics import VariantDynamics as vd
 class GisaidMetadata(object):
 
 	# Intialize GISAID metadata dataframe and perform QC on the data
-	def __init__(self, gisaid_df, seq_length = 29400, n_content = 0.01, min_date = '2022-01-01', max_date = None, WHO = None, PANGO = None):
+	def __init__(self, gisaid_df, seq_length = 28000, min_date = '2022-01-01', max_date = None, WHO = None, PANGO = None):
 		
 		print("Preparing GISAID Metadata ...")
 		
@@ -25,7 +25,7 @@ class GisaidMetadata(object):
 		
 		columns = ['Virus name', 'Accession ID', 'Sequence length', 'AA Substitutions', 'Variant', 'Pango lineage','Collection date', 'N-Content']
 		gisaid_kept = gisaid_df[columns]
-		gisaid_kept = gisaid_kept[(gisaid_kept['Sequence length'] > seq_length) & (gisaid_kept['N-Content'] < n_content)]
+		gisaid_kept = gisaid_kept[(gisaid_kept['Sequence length'] > seq_length)]
 		gisaid_kept['Collection date'] = pd.to_datetime(gisaid_kept['Collection date'])
 		if max_date:
 			max_month = datetime.strptime(max_date, '%Y-%m-%d')
@@ -189,6 +189,7 @@ class GisaidMetadata(object):
 		prot_prevalence = {}
 		prot_region_date_counts = {}
 
+		protein = protein+"_"
 		for ind in data.index:
 			name = data['Virus name'][ind].split("/")
 			region = name[1]
@@ -205,31 +206,27 @@ class GisaidMetadata(object):
 				prot_region_date_counts[region][date] = 1
 
 			if self.who:
-				data_type = 'gisaid_'+self.who+'_'+protein+'_cov'
+				data_type = 'gisaid_'+self.who+'_'+protein+'cov'
 				clade = data['Variant'][ind]
 				if self.who in clade:
 					cov = data['AA Substitutions'][ind]
 				else:
 					continue
 			elif self.pango:
-				data_type = 'gisaid_'+self.pango+'_'+protein+'_cov'
+				data_type = 'gisaid_'+self.pango+'_'+protein+'cov'
 				pango_lineage = data['Pango lineage'][ind]
 				if self.pango in pango_lineage:
 					cov = data['AA Substitutions'][ind]
 				else:
 					continue
 			else:
-				data_type = 'gisaid_'+protein+'_cov'
+				data_type = 'gisaid_'+protein+'cov'
 				cov = data['AA Substitutions'][ind]
 
-			cov = cov[1:-1]
-			muts = cov.split(",")
+			cov = cov[1:-1].split(",")
 			
-			prot_cov = []
-			for mut in muts:
-				m = mut.split("_")[0]
-				if protein == m:
-					prot_cov.append(mut)
+			prot_cov = [x for x in cov if (x.startswith(protein) and (("ins" in x) == False))]
+			prot_cov = list(map(lambda x: str(x).replace('del', '-'), prot_cov))
 			prot_cov.sort(key=num_sort)
 			prot_cov = ",".join(prot_cov)
 

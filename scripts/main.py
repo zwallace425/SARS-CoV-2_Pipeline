@@ -47,7 +47,7 @@ def ProgramUsage():
 	print('\n')
 	print("[GISAID args] --WHO [WHO NAME]")
 	print("[GISAID args] --PANGO [PANGO LINEAGE]")
-	print("[GISAID or GenBank/BV-BRC args] --period [D/W/2W/M] --interval [>=2 AND <=6] --n_content [>0 AND <1] --seq_length [SEQUENCE LENGTH] --min_date [>2019-11-01] --max_date [YYYY-MM-DD] --protein [SARS-CoV-2 PROTEIN] --region [REGION")
+	print("[GISAID or GenBank/BV-BRC args] --period [D/W/2W/M] --interval [>=2 AND <=6] --n_content [>0 AND <1] --seq_length [SEQUENCE LENGTH] --min_date [>2019-11-01] --max_date [YYYY-MM-DD] --protein [SARS-CoV-2 PROTEIN] --region [REGION] --covariants [VARIANTS FILE]")
 	print('\n')
 	print("NOTE: WHO or PANGO input only allowed with GISAID metadata.")
 	print("NOTE: WHO and PANGO input not allowed together.")
@@ -66,6 +66,30 @@ def open_gisaid_metadata(file):
 		return(metadata)
 	except:
 		raise Exception("Could not open the GISAID metadata file")
+
+# Used for opening the covariants file.  This file must have at least one column named 'Variant'
+def open_covariants_file(file, protein): 
+	try:
+		covariants_file = pd.read_csv(file, sep = '\t', encoding = 'latin-1')
+		if ('Variant' in covariants_file.columns):
+			if ('Name' in covariants_file.columns):
+				covariants_file['Name'] = covariants_file['Name'].str.encode('ascii', 'ignore').str.decode('ascii')
+				covariants_file['Name'] = covariants_file['Name'].str.replace('Ê', '')
+			covariants_file['Variant'] = covariants_file['Variant'].str.replace(' ', '')
+			covariants_file['Variant'] = covariants_file['Variant'].str.replace('Ê', '')
+			variants = list(covariants_file['Variant'])
+			variants_prot = []
+			for variant in variants:
+				muts = variant.split(",")
+				muts = [protein+"_"+mut for mut in muts]
+				muts = ",".join(muts)
+				variants_prot.append(muts)
+			covariants_file['Protein+Variant'] = variants_prot
+			return(covariants_file)
+		else:
+			sys.exit("Invalid covariants file format. Inputted covariants file must be tabular with one column labeled 'Variant'.  Optional 'Name' or 'Identifier' columns permitted. See ReadMe.md for more details.")
+	except:
+		raise Exception("Could not open covariants file")
 
 if __name__ == "__main__":
 
@@ -91,6 +115,7 @@ if __name__ == "__main__":
 	parser.add_argument('--WHO', dest = 'who', type = str)
 	parser.add_argument('--PANGO', dest = 'pango', type = str)
 	parser.add_argument('--region', dest = 'region', type = str)
+	parser.add_argument('--covariants', dest = 'covariants', type = str)
 	args = parser.parse_args()
 
 	spike_sfoc = pd.read_csv("data/Spike_SFoCs.txt", sep = '\t')
@@ -144,7 +169,7 @@ if __name__ == "__main__":
 	else:
 		# Different intialized interval for scoring vs plotting
 		if args.analyze:
-			interval = 3
+			interval = 4
 		elif args.plot:
 			interval = 6
 	
@@ -213,21 +238,35 @@ if __name__ == "__main__":
 	else:
 		world_growth = False
 
+	# Inputted covariants files to score
+	if args.covariants:
+		if (not args.protein):
+			print('\n')
+			print("Must enter protein argument with covariants file.")
+			print('\n')
+			sys.exit()
+		else:
+			covariants_file = open_covariants_file(args.covariants, args.protein)
+			covariants = list(covariants_file["Protein+Variant"])
+	else:
+		covariants = []
+
+
 
 
 	# Running the pipline on GISAID metadata
 	if args.gisaid:
 		gisaid = open_gisaid_metadata(args.gisaid)
-		gm_object = gm(gisaid, seq_length, n_content, min_date, max_date, who, pango)
+		gm_object = gm(gisaid, seq_length, min_date, max_date, who, pango)
 		if (args.analyze == "covariants" or args.plot == "covariants"):
 			if protein:
 				prot_counts_df, prot_region_dates_df = gm_object.protein_counts(protein)
 				prot_prevalence_df = va.analyze_dynamics(prot_counts_df, prot_region_dates_df, period, world_growth)
 				if args.analyze:
 					if protein == "Spike":
-						scores = vs(prot_prevalence_df, interval).composite_score(spike_sfoc = spike_sfoc)
+						scores = vs(prot_prevalence_df, interval).composite_score(spike_sfoc = spike_sfoc, covariates = covariants)
 					else:
-						scores = vs(prot_prevalence_df, interval).composite_score(non_spike_sfoc = non_spike_sfoc)
+						scores = vs(prot_prevalence_df, interval).composite_score(non_spike_sfoc = non_spike_sfoc, covariates = covariants)
 				elif args.plot:
 					vp(prot_prevalence_df, interval, region, period).plot_covariates(protein, pango, who)
 			else:
@@ -239,6 +278,9 @@ if __name__ == "__main__":
 				elif args.plot:
 					vp(cov_prevalence_df, interval, region, period).plot_covariates(protein, pango, who)
 			if args.analyze:
+				if args.covariants:
+					scores = scores.rename(columns = {"Variant": "Protein+Variant"})
+					scores = covariants_file.merge(scores, on = "Protein+Variant", how = "outer").fillna(0).drop(columns = ["Protein+Variant"]).sort_values(by = ["Composite Score"], ascending = False).reset_index(drop=True)
 				scores.to_csv("results/gisaid_composite_scores_"+period+"_"+today+".txt", sep = '\t', index = False)
 				print(scores)
 		elif (args.analyze == "mutations" or args.plot == "mutations"):
